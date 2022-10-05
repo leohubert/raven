@@ -1,0 +1,10 @@
+{
+  "name": "keyboard",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "node-global-key-listener": "^0.1.1",
+    "play-sound": "^1.1.5"
+  }
+}
