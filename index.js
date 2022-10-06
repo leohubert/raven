@@ -1,16 +1,22 @@
-const { app, BrowserWindow, Menu, MenuItem, globalShortcut } = require('electron')
+const { app, BrowserWindow, globalShortcut, dialog } = require('electron')
 var player = require('play-sound')(opts = {})
+const path = require('path')
 
+const basePath = app.isPackaged ? process.resourcesPath : __dirname 
 
 const sounds = [
-  'foo.m4a',
-  'kraaa.m4a',
+  path.resolve(basePath, 'sounds/foo.m4a'),
+  path.resolve(basePath, 'sounds/kraaa.m4a')
 ]
 
+console.log("sounds",  sounds)
 
 function playSound() {
   player.play(sounds[Math.floor(Math.random()*sounds.length)], function(err){
-    if (err) throw err
+    if (err) {
+      app.quit()
+      dialog.showErrorBox("Error", "Error playing sound")
+    }
   })
 }
 
@@ -35,15 +41,18 @@ app.whenReady().then(() => {
     app.quit()
   })
 
-
   for (const key of keys) {
     globalShortcut.register(key, () => {
-      playSound()
+      try {
+        playSound()
+      } catch (err) {
+        dialog.showErrorBox('Error', err.message)
+        app.quit()
+      }
     })
   }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
-
 })
