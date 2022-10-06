@@ -6,7 +6,8 @@ const basePath = app.isPackaged ? process.resourcesPath : __dirname
 
 const sounds = [
   path.resolve(basePath, 'sounds/foo.m4a'),
-  path.resolve(basePath, 'sounds/kraaa.m4a')
+  path.resolve(basePath, 'sounds/kraaa.m4a'),
+  path.resolve(basePath, 'sounds/mouette.m4a')
 ]
 
 console.log("sounds",  sounds)
