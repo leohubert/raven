@@ -26,10 +26,7 @@ const createWindow = () => {
   }
 }
 
-// Generate all keyboard keys values
 const keys = '`1234567890-=qwertyuiop[]asdfghjkl;\'zxcvbnm,./~!@#$%^&*()_+QWERTYUIOPASDFGHJKL:"ZXCVBNM<>?'.split('')
-
-
 
 app.whenReady().then(() => {
   createWindow()
