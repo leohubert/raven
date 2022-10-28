@@ -7,7 +7,8 @@ const basePath = app.isPackaged ? process.resourcesPath : __dirname
 const sounds = [
   path.resolve(basePath, 'sounds/foo.m4a'),
   path.resolve(basePath, 'sounds/kraaa.m4a'),
-  path.resolve(basePath, 'sounds/mouette.m4a')
+  path.resolve(basePath, 'sounds/mouette.m4a'),
+  path.resolve(basePath, 'sounds/turtle.m4a')
 ]
 
 console.log("sounds",  sounds)
@@ -25,18 +26,20 @@ const createWindow = () => {
   const win = new BrowserWindow({
     width: 0,
     height: 0,
-    show: false
+    show: false,
+    webPreferences: {nodeIntegration: true}
   })
   
   if (process.platform == 'darwin') {  
     app.dock.hide()  
   }
+  return win
 }
 
 const keys = '`1234567890-=qwertyuiop[]asdfghjkl;\'zxcvbnm,./~!@#$%^&*()_+QWERTYUIOPASDFGHJKL:"ZXCVBNM<>?'.split('')
 
 app.whenReady().then(() => {
-  createWindow()
+  const win = createWindow()
 
   globalShortcut.register('OPTION+Q', () => {
     app.quit()
