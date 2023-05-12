@@ -11,8 +11,6 @@ const sounds = [
   path.resolve(basePath, 'sounds/turtle.m4a')
 ]
 
-console.log("sounds",  sounds)
-
 function playSound() {
   player.play(sounds[Math.floor(Math.random()*sounds.length)], function(err){
     if (err) {
