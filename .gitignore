@@ -1,2 +1,6 @@
 node_modules
 dist
+/.idea/.gitignore
+/.idea/modules.xml
+/.idea/raven.iml
+/.idea/vcs.xml
