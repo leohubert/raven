@@ -27,7 +27,7 @@ jobs:
         node-version: 18
     - run: yarn
     - name: Build
-      run: yarn build -p always
+      run: yarn build -p onTag
     - name: Upload ${{ matrix.os }} build
       uses: actions/upload-artifact@v3
       with:
