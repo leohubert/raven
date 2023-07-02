@@ -1,8 +1,11 @@
+const { autoUpdater } = require("electron-updater")
 const { app, BrowserWindow, globalShortcut, dialog } = require('electron')
-var player = require('play-sound')(opts = {})
+const player = require('play-sound')(opts = {})
 const path = require('path')
 
-const basePath = app.isPackaged ? process.resourcesPath : __dirname 
+const basePath = app.isPackaged ? process.resourcesPath : __dirname
+
+const keys = '`1234567890-=qwertyuiop[]asdfghjkl;\'zxcvbnm,./~!@#$%^&*()_QWERTYUIOPASDFGHJKL:"ZXCVBNM<>?'.split('')
 
 const sounds = [
   path.resolve(basePath, 'sounds/foo.m4a'),
@@ -27,34 +30,48 @@ const createWindow = () => {
     show: false,
     webPreferences: {nodeIntegration: true}
   })
-  
-  if (process.platform == 'darwin') {  
-    app.dock.hide()  
+
+  if (process.platform == 'darwin') {
+    app.dock.hide()
   }
   return win
 }
 
-const keys = '`1234567890-=qwertyuiop[]asdfghjkl;\'zxcvbnm,./~!@#$%^&*()_+QWERTYUIOPASDFGHJKL:"ZXCVBNM<>?'.split('')
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   const win = createWindow()
 
   globalShortcut.register('OPTION+Q', () => {
     app.quit()
   })
 
+  globalShortcut.register('OPTION+V', () => {
+    dialog.showErrorBox('Version', 'Version: ' + app.getVersion())
+  })
+
   for (const key of keys) {
-    globalShortcut.register(key, () => {
-      try {
-        playSound()
-      } catch (err) {
-        dialog.showErrorBox('Error', err.message)
-        app.quit()
-      }
-    })
+    try{
+      globalShortcut.register(key, () => {
+        try {
+          playSound()
+        } catch (err) {
+          dialog.showErrorBox('Error', err.message)
+          app.quit()
+        }
+      })
+    } catch (err) {
+      console.log('Error registering key', key, err.message)
+    }
   }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
+
+  autoUpdater.autoDownload = false
+  const updateCheck = await autoUpdater.checkForUpdates()
+  if (updateCheck.updateInfo.version !== app.getVersion()) {
+    await autoUpdater.downloadUpdate()
+    await autoUpdater.quitAndInstall()
+  }
 })

@@ -1,23 +1,34 @@
 {
-  "name": "keyboard",
-  "version": "1.0.0",
+  "name": "raven",
+  "description": "Raven project",
+  "version": "0.0.1",
   "main": "index.js",
   "license": "MIT",
   "build": {
     "appId": "ai.bodyguard.raven",
     "extraResources": [
       "sounds/**/*"
-    ]
+    ],
+    "win": {
+      "publish": ["github"]
+    },
+    "mac": {
+      "publish": ["github"]
+    },
+    "linux": {
+      "publish": ["github"]
+    }
   },
   "scripts": {
     "start": "electron .",
     "build": "electron-builder"
   },
   "dependencies": {
+    "electron-updater": "^6.1.1",
     "play-sound": "^1.1.5"
   },
   "devDependencies": {
-    "electron": "^21.1.0",
-    "electron-builder": "^23.3.3"
+    "electron": "^25.2.0",
+    "electron-builder": "^24.4.0"
   }
 }
