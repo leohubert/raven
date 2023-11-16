@@ -105,6 +105,7 @@ const createWindow = () => {
       height: display.bounds.height,
       transparent: true,
       frame: false,
+      hasShadow: false,
       titleBarStyle: 'hidden',
       titleBarOverlay: true,
       alwaysOnTop: true,

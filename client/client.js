@@ -1,6 +1,5 @@
 const {tsParticles} = require("tsparticles-engine");
 const {loadFull} = require("tsparticles");
-const {loadImageShape} = require("tsparticles-shape-image");
 
 function randomInRange(min, max) {
     return Math.random() * (max - min) + min;
@@ -8,8 +7,6 @@ function randomInRange(min, max) {
 
 document.addEventListener("DOMContentLoaded", async () => {
     await loadFull(tsParticles);
-
-    await loadImageShape(tsParticles);
 
     const particles = await tsParticles.load("tsparticles", {
         fullScreen: {
