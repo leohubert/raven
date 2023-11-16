@@ -24,7 +24,8 @@ const persons = [
       path.resolve(basePath, 'assets/gael/sounds/kraaa.m4a')
     ],
     images: [
-      path.resolve(basePath, 'assets/gael/images/edgael.png')
+      path.resolve(basePath, 'assets/gael/images/edgael.png'),
+      path.resolve(basePath, 'assets/gael/images/gael-phoque-yeah.png'),
       // "https://emoji.slack-edge.com/TPVCBCVHC/edgael/fa0e7760311f5a4a.png"
     ]
   },
@@ -73,14 +74,14 @@ function pickRandomImage(person) {
 function playSound(wins) {
   const person = pickRandomPerson()
   const sound = pickRandomSound(person)
-  const image = pickRandomImage(person)
+  // const image = pickRandomImage(person)
 
   let mousePoint = screen.getCursorScreenPoint()
   wins.forEach(win => {
     let bounds = win.getBounds()
     if (bounds.x <= mousePoint.x && mousePoint.x <= bounds.x + bounds.width &&
         bounds.y <= mousePoint.y && mousePoint.y <= bounds.y + bounds.height) {
-      win.webContents.send('sound', image)
+      win.webContents.send('sound', person.images)
     }
   })
 
@@ -116,7 +117,7 @@ const createWindow = () => {
     })
     win.setHiddenInMissionControl(true)
     win.setWindowButtonVisibility(false)
-    win.setAlwaysOnTop(true)
+    win.setAlwaysOnTop(true, 'screen-saver')
     win.setVisibleOnAllWorkspaces(true, {
       visibleOnFullScreen: true
     })

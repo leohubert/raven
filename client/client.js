@@ -1,7 +1,10 @@
-const { tsParticles } = require("tsparticles-engine");
-const { loadFull } = require("tsparticles");
-const { loadImageShape } = require("tsparticles-shape-image");
+const {tsParticles} = require("tsparticles-engine");
+const {loadFull} = require("tsparticles");
+const {loadImageShape} = require("tsparticles-shape-image");
 
+function randomInRange(min, max) {
+    return Math.random() * (max - min) + min;
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
     await loadFull(tsParticles);
@@ -15,12 +18,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         },
         fpsLimit: 120,
         particles: {
-            number: {
-                value: 0,
-            },
-            color: {
-                value: ["#26ccff", "#a25afd", "#ff5e7e", "#88ff5a", "#fcff42", "#ffa62d", "#ff36ff"],
-            },
             shape: {
                 type: 'image',
                 image: {
@@ -28,91 +25,90 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             },
             opacity: {
-                value: { min: 0, max: 1 },
+                value: 1,
                 animation: {
                     enable: true,
-                    speed: 0.5,
+                    minimumValue: 0.2,
+                    speed: 0.1,
                     startValue: "max",
-                    destroy: "min",
-                },
+                }
             },
             size: {
-                value: 50,
+                value: 42,
+                random: {
+                    enable: true,
+                    minimumValue: 20
+                }
             },
             links: {
-                enable: false,
-            },
-            life: {
-                duration: {
-                    sync: true,
-                    value: 20 / 6,
-                },
-                count: 1,
+                enable: false
             },
             move: {
-                angle: {
-                    value: 45,
-                    offset: 0,
-                },
-                drift: 0,
                 enable: true,
                 gravity: {
                     enable: true,
-                    acceleration: 9.81,
+                    acceleration: 10
                 },
-                speed: 45,
+                speed: {
+                    min: 50,
+                    max: 100
+                },
                 decay: 0.1,
-                direction: -90,
-                random: true,
+                direction: "top",
                 straight: false,
                 outModes: {
-                    default: "none",
-                    bottom: "destroy",
-                },
-
+                    default: "destroy",
+                    top: "none"
+                }
             },
             rotate: {
                 value: {
                     min: 0,
-                    max: 360,
+                    max: 360
                 },
                 direction: "random",
+                move: true,
                 animation: {
                     enable: true,
-                    speed: 60,
-                },
+                    speed: 60
+                }
             },
             tilt: {
                 direction: "random",
                 enable: true,
+                move: true,
                 value: {
                     min: 0,
-                    max: 360,
+                    max: 360
                 },
                 animation: {
                     enable: true,
-                    speed: 60,
-                },
+                    speed: 60
+                }
+            },
+            shadow: {
+                enable: false,
             },
             roll: {
                 darken: {
                     enable: true,
-                    value: 25,
+                    value: 25
                 },
                 enable: true,
                 speed: {
                     min: 15,
-                    max: 25,
-                },
+                    max: 25
+                }
             },
             wobble: {
-                distance: 70,
+                distance: 30,
                 enable: true,
+                move: true,
                 speed: {
                     min: -15,
-                    max: 15,
-                },
-            },
+                    max: 15
+                }
+            }
         },
         detectRetina: true,
         motion: {
@@ -121,47 +117,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         interactivity: {
             detectsOn: "window",
             events: {
-              // onhover: {
-              //   enable: true,
-              //   mode: "trail"
-              // },
-              onclick: {
-                enable: true,
-                mode: "push"
-              },
-              resize: true
+                onclick: {
+                    enable: true,
+                    mode: "push"
+                },
+                resize: true
             },
             modes: {
-              grab: {
-                distance: 400,
-                line_linked: {
-                  opacity: 1
+                push: {
+                    particles_nb: randomInRange(5, 15)
                 }
-              },
-              bubble: {
-                distance: 400,
-                size: 40,
-                duration: 2,
-                opacity: 0.8,
-                speed: 3
-              },
-              repulse: {
-                distance: 200
-              },
-              push: {
-                particles_nb: 5
-              },
-              remove: {
-                particles_nb: 4
-              },
             }
-          },
+        },
     });
 
-    window.electron.onSoundPlayed((image) => {
-        particles.options.particles.shape.image = [{
-            src: image
-        }];
+    window.electron.onSoundPlayed((imagesUrl) => {
+        particles.options.particles.shape.image = imagesUrl.map(url => ({
+            src: url
+        }));
         particles.updateActualOptions();
         particles.handleClickMode('push')
     })

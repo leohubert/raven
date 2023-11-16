@@ -19,8 +19,8 @@ contextBridge.exposeInMainWorld(
     'electron',
     {
         onSoundPlayed: (method) => {
-            ipcRenderer.on('sound' , (e, person) => {
-                method(person)
+            ipcRenderer.on('sound' , (e, imagesUrl) => {
+                method(imagesUrl)
             })
         }
     }
