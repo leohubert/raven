@@ -1,5 +1,5 @@
 const { autoUpdater } = require("electron-updater")
-const { app, BrowserWindow, globalShortcut, dialog } = require('electron')
+const { app, BrowserWindow, globalShortcut, dialog, ipcMain, screen  } = require('electron')
 const player = require('play-sound')(opts = {})
 const path = require('path')
 
@@ -7,15 +7,84 @@ const basePath = app.isPackaged ? process.resourcesPath : __dirname
 
 const keys = '`1234567890-=qwertyuiop[]asdfghjkl;\'zxcvbnm,./~!@#$%^&*()_QWERTYUIOPASDFGHJKL:"ZXCVBNM<>?'.split('')
 
-const sounds = [
-  path.resolve(basePath, 'sounds/foo.m4a'),
-  path.resolve(basePath, 'sounds/kraaa.m4a'),
-  path.resolve(basePath, 'sounds/mouette.m4a'),
-  path.resolve(basePath, 'sounds/turtle.m4a')
+const persons = [
+  {
+    person: 'leo',
+    sounds: [
+      path.resolve(basePath, 'assets/leo/sounds/foo.m4a')
+    ],
+    images: [
+      path.resolve(basePath, 'assets/leo/images/happy-leo.png')
+      // "https://emoji.slack-edge.com/TPVCBCVHC/happy-leo/51b1c74574800482.png"
+    ]
+  },
+  {
+    person: 'gael',
+    sounds: [
+      path.resolve(basePath, 'assets/gael/sounds/kraaa.m4a')
+    ],
+    images: [
+      path.resolve(basePath, 'assets/gael/images/edgael.png')
+      // "https://emoji.slack-edge.com/TPVCBCVHC/edgael/fa0e7760311f5a4a.png"
+    ]
+  },
+  {
+    person: 'guillaume',
+    sounds: [
+      path.resolve(basePath, 'assets/guillaume/sounds/mouette.m4a')
+    ],
+    images: [
+      path.resolve(basePath, 'assets/guillaume/images/pasto-santa.png')
+      // 'https://emoji.slack-edge.com/TPVCBCVHC/pasto-santa/87d62245ed0311db.png'
+    ]
+  },
+  {
+    person: 'manu',
+    sounds: [
+      path.resolve(basePath, 'assets/manu/sounds/turtle.m4a')
+    ],
+    images: [
+      path.resolve(basePath, 'assets/manu/images/bunny-manu.png')
+      // "https://emoji.slack-edge.com/TPVCBCVHC/bunny-manu/920b24217c240dea.png"
+    ]
+  }
 ]
 
-function playSound() {
-  player.play(sounds[Math.floor(Math.random()*sounds.length)], function(err){
+
+let lastPerson = null;
+function pickRandomPerson() {
+  let sound;
+  do {
+    sound = persons[Math.floor(Math.random()*persons.length)];
+  } while (sound === lastPerson);
+
+  lastPerson = sound;
+  return sound
+}
+
+function pickRandomSound(person) {
+  return person.sounds[Math.floor(Math.random()*person.sounds.length)];
+}
+
+function pickRandomImage(person) {
+  return person.images[Math.floor(Math.random()*person.images.length)];
+}
+
+function playSound(wins) {
+  const person = pickRandomPerson()
+  const sound = pickRandomSound(person)
+  const image = pickRandomImage(person)
+
+  let mousePoint = screen.getCursorScreenPoint()
+  wins.forEach(win => {
+    let bounds = win.getBounds()
+    if (bounds.x <= mousePoint.x && mousePoint.x <= bounds.x + bounds.width &&
+        bounds.y <= mousePoint.y && mousePoint.y <= bounds.y + bounds.height) {
+      win.webContents.send('sound', image)
+    }
+  })
+
+  player.play(sound, function(err){
     if (err) {
       app.quit()
       dialog.showErrorBox("Error", "Error playing sound")
@@ -24,22 +93,49 @@ function playSound() {
 }
 
 const createWindow = () => {
-  const win = new BrowserWindow({
-    width: 0,
-    height: 0,
-    show: false,
-    webPreferences: {nodeIntegration: true}
-  })
+  let wins = []
+  let displays = screen.getAllDisplays()
 
-  if (process.platform == 'darwin') {
-    app.dock.hide()
+  for (display of displays) {
+    const win = new BrowserWindow({
+      x: display.bounds.x,
+      y: display.bounds.y,
+      width: display.bounds.width,
+      height: display.bounds.height,
+      transparent: true,
+      frame: false,
+      titleBarStyle: 'hidden',
+      titleBarOverlay: true,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+      enableLargerThanScreen: true,
+      webPreferences: {
+        preload: path.join(__dirname, 'preload.js'),
+        nodeIntegration: true
+      }
+    })
+    win.setHiddenInMissionControl(true)
+    win.setWindowButtonVisibility(false)
+    win.setAlwaysOnTop(true)
+    win.setVisibleOnAllWorkspaces(true, {
+      visibleOnFullScreen: true
+    })
+    win.setIgnoreMouseEvents(true)
+    win.loadFile('client/index.html')
+    // win.webContents.openDevTools()
+    wins.push(win)
   }
-  return win
+
+  return wins
 }
 
 
 app.whenReady().then(async () => {
-  const win = createWindow()
+  const wins = createWindow()
+
+  if (process.platform === 'darwin') {
+    app.dock.hide()
+  }
 
   globalShortcut.register('OPTION+Q', () => {
     app.quit()
@@ -49,11 +145,17 @@ app.whenReady().then(async () => {
     dialog.showErrorBox('Version', 'Version: ' + app.getVersion())
   })
 
+  globalShortcut.register('OPTION+D', () => {
+    wins.forEach(win => {
+      win.webContents.openDevTools()
+    })
+  })
+
   for (const key of keys) {
     try{
       globalShortcut.register(key, () => {
         try {
-          playSound()
+          playSound(wins)
         } catch (err) {
           dialog.showErrorBox('Error', err.message)
           app.quit()

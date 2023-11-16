@@ -1,34 +1,47 @@
 {
   "name": "raven",
   "description": "Raven project",
+  "type": "commonjs",
   "version": "0.0.2",
   "main": "index.js",
   "license": "MIT",
   "build": {
     "appId": "ai.bodyguard.raven",
     "extraResources": [
-      "sounds/**/*"
+      "assets/**/*"
     ],
     "win": {
-      "publish": ["github"]
+      "publish": [
+        "github"
+      ]
     },
     "mac": {
-      "publish": ["github"]
+      "publish": [
+        "github"
+      ]
     },
     "linux": {
-      "publish": ["github"]
+      "publish": [
+        "github"
+      ]
     }
   },
   "scripts": {
-    "start": "electron .",
-    "build": "electron-builder"
+    "start": "yarn build:client && electron .",
+    "build:client": "webpack --mode production",
+    "build": "yarn build:client && electron-builder"
   },
   "dependencies": {
     "electron-updater": "^6.1.1",
-    "play-sound": "^1.1.5"
+    "play-sound": "^1.1.5",
+    "tsparticles": "^2.12.0",
+    "tsparticles-demo-configs": "^2.12.0",
+    "tsparticles-engine": "^2.12.0",
+    "webpack": "^5.89.0"
   },
   "devDependencies": {
-    "electron": "^25.2.0",
-    "electron-builder": "^24.4.0"
+    "electron": "^25.8.0",
+    "electron-builder": "^24.4.0",
+    "webpack-cli": "^5.1.4"
   }
 }
