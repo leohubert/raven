@@ -15,7 +15,6 @@ const persons = [
     ],
     images: [
       path.resolve(basePath, 'assets/leo/images/happy-leo.png')
-      // "https://emoji.slack-edge.com/TPVCBCVHC/happy-leo/51b1c74574800482.png"
     ]
   },
   {
@@ -26,7 +25,7 @@ const persons = [
     images: [
       path.resolve(basePath, 'assets/gael/images/edgael.png'),
       path.resolve(basePath, 'assets/gael/images/gael-phoque-yeah.png'),
-      // "https://emoji.slack-edge.com/TPVCBCVHC/edgael/fa0e7760311f5a4a.png"
+      path.resolve(basePath, 'assets/gael/images/bunny-gael.png'),
     ]
   },
   {
@@ -36,7 +35,6 @@ const persons = [
     ],
     images: [
       path.resolve(basePath, 'assets/guillaume/images/pasto-santa.png')
-      // 'https://emoji.slack-edge.com/TPVCBCVHC/pasto-santa/87d62245ed0311db.png'
     ]
   },
   {
@@ -46,7 +44,34 @@ const persons = [
     ],
     images: [
       path.resolve(basePath, 'assets/manu/images/bunny-manu.png')
-      // "https://emoji.slack-edge.com/TPVCBCVHC/bunny-manu/920b24217c240dea.png"
+    ]
+  },
+  {
+    person: 'seb',
+    sounds: [
+      path.resolve(basePath, 'assets/seb/sounds/seb-pouet.m4a')
+    ],
+    images: [
+      path.resolve(basePath, 'assets/seb/images/french-seb.png'),
+      path.resolve(basePath, 'assets/seb/images/seb-round.png')
+    ]
+  },
+  {
+    person: 'grace',
+    sounds: [
+      path.resolve(basePath, 'assets/grace/sounds/ya-grace.m4a')
+    ],
+    images: [
+      path.resolve(basePath, 'assets/grace/images/grace-slayy.png'),
+    ]
+  },
+  {
+    person: 'nikan',
+    sounds: [
+      path.resolve(basePath, 'assets/nikan/sounds/cat.m4a')
+    ],
+    images: [
+      path.resolve(basePath, 'assets/nikan/images/porshe.png'),
     ]
   }
 ]

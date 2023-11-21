@@ -31,10 +31,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             },
             size: {
-                value: 42,
+                value: 60,
                 random: {
                     enable: true,
-                    minimumValue: 20
+                    minimumValue: 30
                 }
             },
             links: {
@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 enable: true,
                 gravity: {
                     enable: true,
-                    acceleration: 10
+                    acceleration: 30
                 },
                 speed: {
                     min: 50,
@@ -61,42 +61,42 @@ document.addEventListener("DOMContentLoaded", async () => {
             rotate: {
                 value: {
                     min: 0,
-                    max: 360
+                    max: 120
                 },
                 direction: "random",
                 move: true,
                 animation: {
                     enable: true,
-                    speed: 60
+                    speed: 42
                 }
             },
-            tilt: {
-                direction: "random",
-                enable: true,
-                move: true,
-                value: {
-                    min: 0,
-                    max: 360
-                },
-                animation: {
-                    enable: true,
-                    speed: 60
-                }
-            },
+            // tilt: {
+            //     direction: "random",
+            //     enable: true,
+            //     move: true,
+            //     value: {
+            //         min: 0,
+            //         max: 360
+            //     },
+            //     animation: {
+            //         enable: true,
+            //         speed: 60
+            //     }
+            // },
             shadow: {
                 enable: false,
             },
-            roll: {
-                darken: {
-                    enable: true,
-                    value: 25
-                },
-                enable: true,
-                speed: {
-                    min: 15,
-                    max: 25
-                }
-            },
+            // roll: {
+            //     darken: {
+            //         enable: true,
+            //         value: 25
+            //     },
+            //     enable: true,
+            //     speed: {
+            //         min: 15,
+            //         max: 25
+            //     }
+            // },
             wobble: {
                 distance: 30,
                 enable: true,
