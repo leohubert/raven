@@ -1,46 +1,42 @@
 {
   "name": "raven",
-  "description": "Raven project",
-  "type": "commonjs",
-  "version": "0.2.0",
-  "main": "index.js",
-  "license": "MIT",
-  "build": {
-    "appId": "ai.bodyguard.raven",
-    "extraResources": [
-      "assets/**/*"
-    ],
-    "win": {
-      "publish": [
-        "github"
-      ]
-    },
-    "mac": {
-      "publish": [
-        "github"
-      ]
-    },
-    "linux": {
-      "publish": [
-        "github"
-      ]
-    }
-  },
+  "productName": "raven",
+  "version": "1.0.0",
+  "description": "Bodyguard Raven Project",
+  "main": ".vite/build/main.js",
   "scripts": {
-    "start": "yarn build:client && electron .",
-    "build:client": "webpack --mode production",
-    "build": "yarn build:client && electron-builder"
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "build": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "eslint --ext .ts,.tsx ."
+  },
+  "keywords": [],
+  "author": {
+    "name": "Léo Hubert",
+    "email": "leo.hubert@bodyguard.ai"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@electron-forge/cli": "^7.1.0",
+    "@electron-forge/maker-deb": "^7.1.0",
+    "@electron-forge/maker-rpm": "^7.1.0",
+    "@electron-forge/maker-squirrel": "^7.1.0",
+    "@electron-forge/maker-zip": "^7.1.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.1.0",
+    "@electron-forge/plugin-vite": "^7.1.0",
+    "@types/play-sound": "^1.1.2",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "electron": "27.1.0",
+    "eslint": "^8.0.1",
+    "eslint-plugin-import": "^2.25.0",
+    "ts-node": "^10.0.0",
+    "typescript": "~4.5.4"
   },
   "dependencies": {
-    "electron-updater": "^6.1.1",
-    "play-sound": "^1.1.5",
+    "play-sound": "^1.1.6",
     "tsparticles": "^2.12.0",
-    "tsparticles-engine": "^2.12.0",
-    "webpack": "^5.89.0"
-  },
-  "devDependencies": {
-    "electron": "^25.8.0",
-    "electron-builder": "^24.4.0",
-    "webpack-cli": "^5.1.4"
+    "tsparticles-engine": "^2.12.0"
   }
 }
