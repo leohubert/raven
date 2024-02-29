@@ -266,10 +266,10 @@ app.whenReady().then(async () => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })
 
-    // autoUpdater.autoDownload = false
-    // const updateCheck = await autoUpdater.checkForUpdates()
-    // if (updateCheck.updateInfo.version !== app.getVersion()) {
-    //   await autoUpdater.downloadUpdate()
-    //   await autoUpdater.quitAndInstall()
-    // }
+    autoUpdater.autoDownload = false
+    const updateCheck = await autoUpdater.checkForUpdates()
+    if (updateCheck.updateInfo.version !== app.getVersion()) {
+      await autoUpdater.downloadUpdate()
+      await autoUpdater.quitAndInstall()
+    }
 })
