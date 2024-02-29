@@ -4,15 +4,14 @@ const player = require('play-sound')(opts = {})
 const path = require('path')
 const fs = require('fs')
 
-const themes = fs.readdirSync(path.resolve(__dirname, 'assets', 'themes'))
-let currentTheme = themes[Math.floor(Math.random() * themes.length)]
-
+const keys = '`1234567890-=qwertyuiop[]asdfghjkl;\'zxcvbnm,./~!@#$%^&*()_QWERTYUIOPASDFGHJKL:"ZXCVBNM<>?'.split('')
 const soundExt = ['.mp3', '.wav', '.ogg', '.m4a']
 const imageExt = ['.png']
 
 const basePath = app.isPackaged ? process.resourcesPath : __dirname
 
-const keys = '`1234567890-=qwertyuiop[]asdfghjkl;\'zxcvbnm,./~!@#$%^&*()_QWERTYUIOPASDFGHJKL:"ZXCVBNM<>?'.split('')
+const themes = fs.readdirSync(path.resolve(basePath, 'assets', 'themes'))
+let currentTheme = themes[Math.floor(Math.random() * themes.length)]
 
 function getFiles(dir, recursive = true) {
     const dirents = fs.readdirSync(dir, {withFileTypes: true});
