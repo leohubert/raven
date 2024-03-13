@@ -32,4 +32,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: builds-${{ matrix.os }}
-        path: build/**
+        path: dist/**
