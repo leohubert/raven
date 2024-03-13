@@ -18,12 +18,12 @@ function start_raven() {
         open /tmp/raven.app
         pkill -a Terminal
     else
-        chmod +x /tmp/raven/raven
-        /tmp/raven/raven
+        chmod +x /tmp/raven.AppImage
+        /tmp/raven.AppImage
     fi
 }
 
-if [ -d "/tmp/raven.app" ] || [ -d "/tmp/raven" ]; then
+if [ -d "/tmp/raven.app" ] || [ -d "/tmp/raven.AppImage" ]; then
     echo "Raven is already installed"
 else
     install_raven
