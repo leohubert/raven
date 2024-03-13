@@ -1,0 +1,1 @@
+"use strict";const r=require("electron");window.addEventListener("DOMContentLoaded",()=>{const n=(e,o)=>{const t=document.getElementById(e);t&&(t.innerText=o)};for(const e of["chrome","node","electron"])n(`${e}-version`,process.versions[e])});r.contextBridge.exposeInMainWorld("electron",{onSoundPlayed:n=>{r.ipcRenderer.on("sound",(e,o)=>{n(o)})}});

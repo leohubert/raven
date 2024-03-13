@@ -70,33 +70,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                     speed: 42
                 }
             },
-            // tilt: {
-            //     direction: "random",
-            //     enable: true,
-            //     move: true,
-            //     value: {
-            //         min: 0,
-            //         max: 360
-            //     },
-            //     animation: {
-            //         enable: true,
-            //         speed: 60
-            //     }
-            // },
             shadow: {
                 enable: false,
             },
-            // roll: {
-            //     darken: {
-            //         enable: true,
-            //         value: 25
-            //     },
-            //     enable: true,
-            //     speed: {
-            //         min: 15,
-            //         max: 25
-            //     }
-            // },
             wobble: {
                 distance: 30,
                 enable: true,

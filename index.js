@@ -85,14 +85,16 @@ let theme = loadTheme(currentTheme)
 
 let lastSounds = []
 
-function pickRandomSound(customItem) {
-    const item = theme.global[customItem] ?? theme
+function pickRandomSound(opts = {}) {
+    const {customItem, key} = opts
+
+    const item = theme.keys[key] ?? theme.global[customItem] ?? theme
 
     const sounds = item.sounds.filter(sound => !lastSounds.includes(sound))
 
     if (!sounds.length) {
         lastSounds = lastSounds.length > 1 ? [lastSounds.at(-1)] : []
-        return pickRandomSound(customItem)
+        return pickRandomSound(opts)
     }
 
     const sound = sounds[Math.floor(Math.random() * sounds.length)]
@@ -104,8 +106,9 @@ function pickRandomSound(customItem) {
 
 let lastImages = []
 
-function pickRandomImage(customItem) {
-    const item = theme.global[customItem] ?? theme
+function pickRandomImage(opts = {}) {
+    const {customItem, key} = opts
+    const item = theme.keys[key] ?? theme.global[customItem] ?? theme
     const images = item.images.filter(image => !lastImages.includes(image))
 
     if (!images.length) {
@@ -121,9 +124,9 @@ function pickRandomImage(customItem) {
 }
 
 function pickRandomItem(customItem) {
-    const sound = pickRandomSound(customItem)
+    const sound = pickRandomSound({customItem})
     const soundFolder = path.basename(path.dirname(sound))
-    const image = pickRandomImage(soundFolder)
+    const image = pickRandomImage({customItem: soundFolder})
 
     return {
         sound,
@@ -132,14 +135,12 @@ function pickRandomItem(customItem) {
 }
 
 function pickKeyItem(key) {
-    const item = theme.keys[key]
-
-    const sound = item.sounds[Math.floor(Math.random() * item.sounds.length)]
+    const sound = pickRandomSound({key})
     const soundFolder = path.basename(path.dirname(sound))
-    let image = item.images[Math.floor(Math.random() * item.images.length)]
+    let image = pickRandomImage({key: soundFolder})
 
     if (!image) {
-        image = pickRandomImage(soundFolder)
+        image = pickRandomImage({customItem: soundFolder})
     }
 
     return {
