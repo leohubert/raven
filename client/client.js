@@ -89,12 +89,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    window.electron.onSoundPlayed((images, mouseX, mouseY) => {
-        const shapesToDisplay = randomInRange(5, 15);
+    window.electron.onSoundPlayed((opts) => {
+        const {images, mousePosition, count} = opts
+
+        const shapesToDisplay = count ?? randomInRange(5, 15);
         for (let i = 0; i < shapesToDisplay; i++) {
             particles.particles.addParticle({
-                x: mouseX * 2,
-                y: mouseY * 2
+                x: mousePosition.x * 2,
+                y: mousePosition.y * 2
             }, {
                 shape: {
                     type: 'image',

@@ -1,4 +1,4 @@
-const {autoUpdater} = require("electron-updater")
+// const {autoUpdater} = require("electron-updater")
 const {app, BrowserWindow, globalShortcut, dialog, ipcMain, screen} = require('electron')
 const player = require('play-sound')(opts = {})
 const path = require('path')
@@ -76,9 +76,9 @@ function loadTheme(theme) {
         }
     }
 
-    if (introFiles.length) {
-        playSound(introFiles[Math.floor(Math.random() * introFiles.length)])
-    }
+    // if (introFiles.length) {
+    //     playSound(introFiles[Math.floor(Math.random() * introFiles.length)])
+    // }
 
     return {
         images,
@@ -169,8 +169,10 @@ function playSound(sound) {
     })
 }
 
-function handleKeyPressed(key, wins) {
-    const {sound, images} = pickKeyItem(key)
+function triggerImages(wins, images, count = null) {
+    if (typeof images === 'string') {
+        images = [images]
+    }
 
     let mousePoint = screen.getCursorScreenPoint()
     wins.forEach(win => {
@@ -183,11 +185,20 @@ function handleKeyPressed(key, wins) {
                 y: mousePoint.y - bounds.y
             }
 
-            win.webContents.send('sound', images, mousePositionInWindow.x, mousePositionInWindow.y)
+            win.webContents.send('sound', {
+                images,
+                mousePosition: mousePositionInWindow,
+                count
+            })
         }
     })
+}
+
+function handleKeyPressed(key, wins) {
+    const {sound, images} = pickKeyItem(key)
 
     playSound(sound)
+    triggerImages(wins, images)
 }
 
 const createWindow = () => {
@@ -232,7 +243,6 @@ const createWindow = () => {
 app.whenReady().then(async () => {
     const wins = createWindow()
 
-
     if (process.platform === 'darwin') {
         app.dock.hide()
     }
@@ -258,7 +268,6 @@ app.whenReady().then(async () => {
     for (const key of keys) {
         try {
             globalShortcut.register(key, () => {
-                console.log('Registered key', key)
                 try {
                     handleKeyPressed(key, wins)
                 } catch (err) {
@@ -273,12 +282,17 @@ app.whenReady().then(async () => {
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow()
+
     })
 
-    autoUpdater.autoDownload = false
-    const updateCheck = await autoUpdater.checkForUpdates()
-    if (updateCheck.updateInfo.version !== app.getVersion()) {
-      await autoUpdater.downloadUpdate()
-      await autoUpdater.quitAndInstall()
-    }
+    setTimeout(() => {
+        triggerImages(wins, pickRandomImage(), 1)
+    }, 1000)
+
+    // autoUpdater.autoDownload = false
+    // const updateCheck = await autoUpdater.checkForUpdates()
+    // if (updateCheck.updateInfo.version !== app.getVersion()) {
+    //   await autoUpdater.downloadUpdate()
+    //   await autoUpdater.quitAndInstall()
+    // }
 })
