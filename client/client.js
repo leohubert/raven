@@ -89,7 +89,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    window.electron.onSoundPlayed((imagesUrl, mouseX, mouseY) => {
+    window.electron.onSoundPlayed((images, mouseX, mouseY) => {
         const shapesToDisplay = randomInRange(5, 15);
         for (let i = 0; i < shapesToDisplay; i++) {
             particles.particles.addParticle({
@@ -98,10 +98,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             }, {
                 shape: {
                     type: 'image',
-                    image: imagesUrl.map(url => ({
+                    image: images.map(url => ({
                         src: url,
                     })),
-                }})
+                },
+            })
         }
     })
 })
