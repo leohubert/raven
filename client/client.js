@@ -86,29 +86,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         detectRetina: true,
         motion: {
             disable: true,
-        },
-        interactivity: {
-            detectsOn: "window",
-            events: {
-                onclick: {
-                    enable: true,
-                    mode: "push"
-                },
-                resize: true
-            },
-            modes: {
-                push: {
-                    particles_nb: randomInRange(5, 15)
-                }
-            }
-        },
+        }
     });
 
-    window.electron.onSoundPlayed((imagesUrl) => {
-        particles.options.particles.shape.image = imagesUrl.map(url => ({
-            src: url
-        }));
-        particles.updateActualOptions();
-        particles.handleClickMode('push')
+    window.electron.onSoundPlayed((imagesUrl, mouseX, mouseY) => {
+        const shapesToDisplay = randomInRange(5, 15);
+        for (let i = 0; i < shapesToDisplay; i++) {
+            particles.particles.addParticle({
+                x: mouseX * 2,
+                y: mouseY * 2
+            }, {
+                shape: {
+                    type: 'image',
+                    image: imagesUrl.map(url => ({
+                        src: url,
+                    })),
+                }})
+        }
     })
 })

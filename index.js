@@ -10,7 +10,7 @@ const imageExt = ['.png']
 
 const basePath = app.isPackaged ? process.resourcesPath : __dirname
 
-const themes = fs.readdirSync(path.resolve(basePath, 'assets', 'themes'))
+const themes = getDirectories(path.resolve(basePath, 'assets', 'themes'), false)
 let currentTheme = themes[Math.floor(Math.random() * themes.length)]
 
 function getFiles(dir, recursive = true) {
@@ -27,7 +27,8 @@ function getFiles(dir, recursive = true) {
 
 function getDirectories(dir) {
     const dirents = fs.readdirSync(dir, {withFileTypes: true});
-    return dirents.filter(dirent => dirent.isDirectory()).map(dirent => dirent.name);
+    return dirents.filter(dirent => dirent.isDirectory())
+        .map(dirent => dirent.name);
 }
 
 
@@ -40,8 +41,10 @@ function loadTheme(theme) {
 
     const keysDirectories = getDirectories(themePath).filter(file => file !== 'global')
 
-    let images = getFiles(globalPath).filter(file => imageExt.includes(path.extname(file)))
-    let sounds = getFiles(globalPath).filter(file => soundExt.includes(path.extname(file)))
+    const introFiles = getFiles(path.resolve(themePath), false).filter(file => soundExt.includes(path.extname(file)))
+
+    let images = getFiles(globalPath, false).filter(file => imageExt.includes(path.extname(file)))
+    let sounds = getFiles(globalPath, false).filter(file => soundExt.includes(path.extname(file)))
 
     let global = {}
     for (const globalDir of globalDirectories) {
@@ -71,6 +74,10 @@ function loadTheme(theme) {
             sounds: curSounds,
             images: curImages
         }
+    }
+
+    if (introFiles.length) {
+        playSound(introFiles[Math.floor(Math.random() * introFiles.length)])
     }
 
     return {
@@ -111,9 +118,20 @@ function pickRandomImage(opts = {}) {
     const item = theme.keys[key] ?? theme.global[customItem] ?? theme
     const images = item.images.filter(image => !lastImages.includes(image))
 
+
     if (!images.length) {
-        lastImages = lastImages.length > 1 ? [lastImages.at(-1)] : []
-        return pickRandomImage(customItem)
+        if (item.images.length < 1) {
+            lastImages = []
+        } else {
+            lastImages = lastImages.length > 1 ? [lastImages.at(-1)] : []
+        }
+
+        if (key) {
+            return pickRandomImage({customItem})
+        } else {
+            return null
+        }
+
     }
 
     const image = images[Math.floor(Math.random() * images.length)]
@@ -123,63 +141,53 @@ function pickRandomImage(opts = {}) {
     return image
 }
 
-function pickRandomItem(customItem) {
-    const sound = pickRandomSound({customItem})
-    const soundFolder = path.basename(path.dirname(sound))
-    const image = pickRandomImage({customItem: soundFolder})
-
-    return {
-        sound,
-        image
-    };
-}
-
 function pickKeyItem(key) {
     const sound = pickRandomSound({key})
     const soundFolder = path.basename(path.dirname(sound))
-    let image = pickRandomImage({key: soundFolder})
+    const images = []
 
-    if (!image) {
-        image = pickRandomImage({customItem: soundFolder})
+    for (let i = 0; i < 3; i++) {
+        let image = pickRandomImage({key, customItem: soundFolder})
+        if (!image && i > 0) {
+            break
+        }
+        images.push(image)
     }
 
     return {
         sound,
-        image
+        images
     }
 }
 
-function playSound(key, wins) {
-    let sound
-    let image
+function playSound(sound) {
+    player.play(sound, function (err) {
+        if (err) {
+            app.quit()
+            dialog.showErrorBox("Error", "Error playing sound")
+        }
+    })
+}
 
-    if (theme.keys[key]) {
-        const item = pickKeyItem(key)
-        sound = item.sound
-        image = item.image
-    } else {
-        const item = pickRandomItem()
-        sound = item.sound
-        image = item.image
-    }
+function handleKeyPressed(key, wins) {
+    const {sound, images} = pickKeyItem(key)
 
     let mousePoint = screen.getCursorScreenPoint()
     wins.forEach(win => {
         let bounds = win.getBounds()
+
         if (bounds.x <= mousePoint.x && mousePoint.x <= bounds.x + bounds.width &&
             bounds.y <= mousePoint.y && mousePoint.y <= bounds.y + bounds.height) {
-            win.webContents.send('sound', [image])
+            const mousePositionInWindow = {
+                x: mousePoint.x - bounds.x,
+                y: mousePoint.y - bounds.y
+            }
+
+            win.webContents.send('sound', images, mousePositionInWindow.x, mousePositionInWindow.y)
         }
     })
 
-    setTimeout(() => {
-        player.play(sound, function (err) {
-            if (err) {
-                app.quit()
-                dialog.showErrorBox("Error", "Error playing sound")
-            }
-        })
-    }, 1)
+    playSound(sound)
 }
 
 const createWindow = () => {
@@ -252,7 +260,7 @@ app.whenReady().then(async () => {
             globalShortcut.register(key, () => {
                 console.log('Registered key', key)
                 try {
-                    playSound(key, wins)
+                    handleKeyPressed(key, wins)
                 } catch (err) {
                     dialog.showErrorBox('Error', err.message)
                     app.quit()
