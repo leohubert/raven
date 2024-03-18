@@ -224,8 +224,15 @@ const createWindow = () => {
                 nodeIntegration: true
             }
         })
-        win.setHiddenInMissionControl(true)
-        win.setWindowButtonVisibility(false)
+
+        if (process.platform === 'darwin') {
+            win.setHiddenInMissionControl(true)
+            win.setWindowButtonVisibility(false)
+            win.setSkipTaskbar(true)
+        } else {
+            win.setMenuBarVisibility(false)
+        }
+
         win.setAlwaysOnTop(true, 'screen-saver')
         win.setVisibleOnAllWorkspaces(true, {
             visibleOnFullScreen: true
