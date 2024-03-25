@@ -212,7 +212,8 @@ const createWindow = () => {
     let wins = []
     let displays = screen.getAllDisplays()
 
-    for ([index, display] of displays.entries()) {
+
+    for (const [index, display] of displays.entries()) {
         const win = new BrowserWindow({
             x: display.bounds.x,
             y: display.bounds.y,
@@ -231,6 +232,8 @@ const createWindow = () => {
                 nodeIntegration: true
             }
         })
+        let curIndex = index
+
 
         if (process.platform === 'darwin') {
             win.setHiddenInMissionControl(true)
@@ -249,7 +252,7 @@ const createWindow = () => {
         // win.webContents.openDevTools()
         wins.push(win)
         win.on('ready-to-show', () => {
-            if (index === 0) {
+            if (curIndex === 0) {
                 loadTheme(currentTheme)
             }
         })
