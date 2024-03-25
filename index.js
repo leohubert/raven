@@ -11,7 +11,10 @@ const imageExt = ['.png']
 const basePath = app.isPackaged ? process.resourcesPath : __dirname
 
 const themes = getDirectories(path.resolve(basePath, 'assets', 'themes'), false)
-let currentTheme = themes[Math.floor(Math.random() * themes.length)]
+
+let theme = null
+let lastSounds = []
+let currentTheme =  'raven' //themes[Math.floor(Math.random() * themes.length)]
 
 function getFiles(dir, recursive = true) {
     const dirents = fs.readdirSync(dir, {withFileTypes: true});
@@ -32,9 +35,9 @@ function getDirectories(dir) {
 }
 
 
-function loadTheme(theme) {
-    currentTheme = theme
-    const themePath = path.resolve(basePath, 'assets', 'themes', theme)
+function loadTheme(themeName) {
+    currentTheme = themeName
+    const themePath = path.resolve(basePath, 'assets', 'themes', themeName)
     const globalPath = path.resolve(themePath, 'global')
 
     const globalDirectories = getDirectories(globalPath)
@@ -80,17 +83,17 @@ function loadTheme(theme) {
     //     playSound(introFiles[Math.floor(Math.random() * introFiles.length)])
     // }
 
-    return {
+    theme = {
         images,
         sounds,
         global,
         keys
     }
+
+    triggerImages(undefined, pickRandomImage(), 1)
+
+    return theme
 }
-
-let theme = loadTheme(currentTheme)
-
-let lastSounds = []
 
 function pickRandomSound(opts = {}) {
     const {customItem, key} = opts
@@ -170,6 +173,10 @@ function playSound(sound) {
 }
 
 function triggerImages(wins, images, count = null) {
+    if (wins === undefined) {
+        wins = BrowserWindow.getAllWindows()
+    }
+
     if (typeof images === 'string') {
         images = [images]
     }
@@ -205,7 +212,7 @@ const createWindow = () => {
     let wins = []
     let displays = screen.getAllDisplays()
 
-    for (display of displays) {
+    for ([index, display] of displays.entries()) {
         const win = new BrowserWindow({
             x: display.bounds.x,
             y: display.bounds.y,
@@ -241,6 +248,11 @@ const createWindow = () => {
         win.loadFile('client/index.html')
         // win.webContents.openDevTools()
         wins.push(win)
+        win.on('ready-to-show', () => {
+            if (index === 0) {
+                loadTheme(currentTheme)
+            }
+        })
     }
 
     return wins
@@ -289,12 +301,8 @@ app.whenReady().then(async () => {
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow()
-
     })
 
-    setTimeout(() => {
-        triggerImages(wins, pickRandomImage(), 1)
-    }, 1000)
 
     // autoUpdater.autoDownload = false
     // const updateCheck = await autoUpdater.checkForUpdates()

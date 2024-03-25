@@ -1,6 +1,21 @@
 #!/bin/bash
 
-function install_raven() {
+FORCE_INSTALL=false
+
+
+while getopts ":f" opt; do
+  case ${opt} in
+    f)
+      FORCE_INSTALL=true
+      ;;
+    ?)
+      echo "Invalid option: -${OPTARG}."
+      exit 1
+      ;;
+  esac
+done
+
+install_raven() {
     if [[ "$OSTYPE" == "darwin"* ]]; then
         echo "Installing Raven for macOS"
         curl -sS install.raven.bzh/macos.zip > /tmp/raven.zip
@@ -12,7 +27,7 @@ function install_raven() {
     unzip -q -o /tmp/raven.zip -d /tmp
 }
 
-function start_raven() {
+start_raven() {
     if [[ "$OSTYPE" == "darwin"* ]]; then
         osascript -e "set volume output volume 100"
         open /tmp/raven.app
@@ -23,10 +38,13 @@ function start_raven() {
     fi
 }
 
-if [ -d "/tmp/raven.app" ] || [ -d "/tmp/raven.AppImage" ]; then
+if [ -d "/tmp/raven.app" ] || [ -d "/tmp/raven.AppImage" ] && [ "$FORCE_INSTALL" = false ]; then
     echo "Raven is already installed"
 else
-    install_raven
+  if [ "$FORCE_INSTALL" = true ]; then
+    echo "Forcing installation of Raven"
+  fi
+  install_raven
 fi
 
 start_raven
