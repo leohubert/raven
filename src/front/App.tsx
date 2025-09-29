@@ -24,12 +24,11 @@ export function App() {
 		setPreload(allImages.map((image) => ({
 			src: `app://${image}`,
 			gif: image.toLowerCase().endsWith('.gif'),
-			height: 32,
+			height: 128,
 			name:  image,
-			width: 32
+			width: 128
 		})))
 	}
-
 
 	// this should be run only once per application lifetime
 	useEffect(() => {

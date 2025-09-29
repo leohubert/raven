@@ -14,7 +14,7 @@ const soundPlayer = createPlayer({})
 
 const keys = '`1234567890-=qwertyuiop[]asdfghjkl;\'zxcvbnm,./~!@#$%^&*()_QWERTYUIOPASDFGHJKL:"ZXCVBNM<>?'.split('')
 const soundExt = ['.mp3', '.wav', '.ogg', '.m4a']
-const imageExt = ['.png']
+const imageExt = ['.webp']
 
 const basePath = app.isPackaged ? process.resourcesPath : path.resolve(__dirname, '..', '..')
 

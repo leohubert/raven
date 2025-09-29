@@ -5,6 +5,7 @@
   "description": "My Electron application description",
   "main": ".vite/build/main.js",
   "scripts": {
+    "dev": "electron-forge start",
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
@@ -36,6 +37,7 @@
     "electron": "^38.1.2",
     "eslint": "^8.57.1",
     "eslint-plugin-import": "^2.32.0",
+    "tsx": "^4.20.6",
     "typescript": "~5.9.2",
     "vite": "^5.4.19"
   },
