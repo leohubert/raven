@@ -277,6 +277,15 @@ async function createWindow() {
 			}
 		})
 
+		win.webContents.session.setPermissionCheckHandler(() => {
+			return true
+		})
+
+		win.webContents.session.setDevicePermissionHandler(() => {
+			return true
+		})
+
+
 		if (process.platform === 'darwin') {
 			win.setHiddenInMissionControl(true)
 			win.setWindowButtonVisibility(false)
@@ -350,6 +359,7 @@ app.whenReady().then(async () => {
 	globalShortcut.register('OPTION+D', () => {
 		wins.forEach(win => {
 			win.webContents.openDevTools()
+			win.setIgnoreMouseEvents(false)
 		})
 	})
 
