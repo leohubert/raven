@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>raven</title>
+		<style>
+			html,
+			body {
+				margin: 0;
+				height: 100%;
+				background: transparent;
+				overflow: hidden;
+			}
+			/* The CSS box must be pinned to the viewport. Without it a canvas lays out at
+			   its attribute size, which is 2x the viewport on a retina display, and every
+			   sprite is drawn off-screen. */
+			canvas {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100vw;
+				height: 100vh;
+				display: block;
+				pointer-events: none;
+			}
+		</style>
+	</head>
+	<body>
+		<canvas id="stage"></canvas>
+		<script type="module" src="index.js"></script>
+	</body>
+</html>
