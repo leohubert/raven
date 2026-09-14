@@ -16,16 +16,10 @@ async function main() {
 	const theme = await services.business.loadTheme(newContext());
 	services.overlay.BroadcastTheme(theme);
 
-	const { bare, control, failed } = services.input.Start();
+	// Passive by default: the keyboard is NOT grabbed until the server says Activate.
+	services.control.Start();
 
-	console.log(
-		`[raven] ${env.VERSION} ready - theme "${theme.name}", ${bare} keys grabbed, ${control} hotkeys`,
-	);
-	if (failed.length > 0) {
-		// RegisterEventHotKey refuses a combination another app already holds. Say so.
-		console.warn(`[raven] could not grab ${failed.length}: ${failed.join(" ")}`);
-	}
-	console.log("[raven] OPTION+P or OPTION+Q quit, OPTION+T next theme, OPTION+M click-through");
+	console.log(`[raven] ${env.VERSION} ready - passive, theme "${theme.name}"`);
 
 	process.on("SIGINT", cleanup);
 	process.on("SIGTERM", cleanup);

@@ -9,10 +9,20 @@
     "build": "HUTCH_HOME=\"$PWD/.hutch\" bunx electrobun@2.0.1 build --env=stable",
     "prepare:devkit": "HUTCH_HOME=\"$PWD/.hutch\" bunx electrobun@2.0.1 prepare",
     "test": "bun test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "server": "bun server/bin/app.ts",
+    "proto": "cd proto && PATH=\"$PWD/../node_modules/.bin:$PATH\" bunx buf generate"
   },
   "devDependencies": {
+    "@bufbuild/buf": "^1.73.0",
+    "@bufbuild/protoc-gen-es": "^2.15.0",
     "@types/bun": "latest",
     "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "@bufbuild/protobuf": "^2.15.0",
+    "@connectrpc/connect": "^2.2.0",
+    "@connectrpc/connect-node": "^2.2.0",
+    "@connectrpc/connect-web": "^2.2.0"
   }
 }

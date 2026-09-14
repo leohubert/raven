@@ -1,0 +1,14 @@
+version: v2
+modules:
+  - path: .
+lint:
+  use: [STANDARD]
+  # Fleet services are named `Api`, never `*Service` (see bodyguard.source.v1.Api);
+  # and Connect's stream is a bidi envelope, not a request/response pair, so
+  # ClientToServer/ServerToClient name the contract better than Connect*Request/Response.
+  except:
+    - SERVICE_SUFFIX
+    - RPC_REQUEST_STANDARD_NAME
+    - RPC_RESPONSE_STANDARD_NAME
+breaking:
+  use: [FILE]

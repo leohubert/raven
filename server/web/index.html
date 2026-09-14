@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>raven — remote control</title>
+	<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+	<header>
+		<h1>raven</h1>
+		<span id="status" class="status status-down">connecting…</span>
+	</header>
+
+	<p id="themes-notice" class="notice" hidden></p>
+
+	<table>
+		<thead>
+			<tr>
+				<th>Client</th>
+				<th>Hostname</th>
+				<th>Displays</th>
+				<th>State</th>
+				<th>Theme</th>
+				<th>Available themes</th>
+				<th>Connected</th>
+				<th>Actions</th>
+			</tr>
+		</thead>
+		<tbody id="clients-body"></tbody>
+	</table>
+
+	<script type="module" src="/main.js"></script>
+</body>
+</html>

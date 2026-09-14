@@ -20,6 +20,7 @@
   },
   "include": [
     "src/**/*",
+    "server/**/*",
     "scripts/**/*",
     "electrobun.config.ts"
   ],

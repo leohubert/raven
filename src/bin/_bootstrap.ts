@@ -1,6 +1,7 @@
 import { Screen } from "electrobun/main/native";
 
 import { newBusiness, type Business } from "../business";
+import { newControl, type Control } from "../control";
 import { newInput, type Input } from "../input";
 import { newNative, type Native } from "../native";
 import { newOverlay, type Overlay } from "../overlay";
@@ -15,6 +16,7 @@ export type Services = {
 	business: Business;
 	overlay: Overlay;
 	input: Input;
+	control: Control;
 };
 
 export type BootstrapResult = {
@@ -41,19 +43,23 @@ export function bootstrap(): BootstrapResult {
 
 	const business = newBusiness({ themes, native });
 
+	const screen = {
+		getAllDisplays: () => Screen.getAllDisplays(),
+		getCursorScreenPoint: () => Screen.getCursorScreenPoint(),
+	};
+
 	const overlay = newOverlay({
 		native,
-		screen: {
-			getAllDisplays: () => Screen.getAllDisplays(),
-			getCursorScreenPoint: () => Screen.getCursorScreenPoint(),
-		},
+		screen,
 		viewUrl: env.VIEW_URL,
 		getTheme: () => business.getCurrentTheme(),
 	});
 
 	let input: Input;
+	let control: Control;
 	const cleanup = () => {
 		input?.Stop();
+		control?.Stop();
 		overlay.Close();
 	};
 
@@ -68,7 +74,17 @@ export function bootstrap(): BootstrapResult {
 		showVersion: () => showVersion(env),
 	});
 
-	return { env, services: { native, themes, business, overlay, input }, cleanup };
+	control = newControl({
+		controlUrl: env.CONTROL_URL,
+		version: env.VERSION,
+		business,
+		input,
+		overlay,
+		themes,
+		screen,
+	});
+
+	return { env, services: { native, themes, business, overlay, input, control }, cleanup };
 }
 
 function quit() {

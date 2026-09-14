@@ -21,6 +21,7 @@ export function loadEnv() {
 	return {
 		APP_IDENTIFIER,
 		VERSION: getString("RAVEN_VERSION", "1.0.0"),
+		CONTROL_URL: getString("RAVEN_CONTROL_URL", "http://127.0.0.1:8787"),
 		/** Themes are copied into the view root - `views://` is the only scheme that works. */
 		THEMES_ROOT: getString("RAVEN_THEMES_ROOT", join(PATHS.VIEWS_FOLDER, "overlay", "themes")),
 		ASSET_BASE_URL: getString("RAVEN_ASSET_BASE_URL", "views://overlay/themes"),

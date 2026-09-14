@@ -2,6 +2,7 @@ import { cycleTheme } from "./cycleTheme";
 import { getCurrentTheme } from "./getCurrentTheme";
 import { loadTheme } from "./loadTheme";
 import { onKeyPressed } from "./onKeyPressed";
+import { playAsset, type PlayAssetRequest } from "./playAsset";
 import type { Context } from "./context";
 import type { Deps } from "./deps";
 import type { Options } from "./options";
@@ -12,6 +13,7 @@ export { newContext } from "./context";
 export { NoThemeLoadedError, NoThemesAvailableError } from "./error";
 export type { Context } from "./context";
 export type { Options } from "./options";
+export type { PlayAssetRequest } from "./playAsset";
 export type { Burst, KeyPress, PickedGroup, State } from "./types";
 
 function newState(): State {
@@ -42,6 +44,8 @@ export function newBusiness(opts: Options) {
 		getCurrentTheme: (): Theme | null => getCurrentTheme(deps),
 		onKeyPressed: (ctx: Context, req: KeyPress): Burst | null =>
 			onKeyPressed(deps, ctx, req),
+		playAsset: (ctx: Context, req: PlayAssetRequest): Promise<Burst | null> =>
+			playAsset(deps, ctx, req),
 		isHealthy: (): boolean => deps.state.theme !== null,
 	};
 }

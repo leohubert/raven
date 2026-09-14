@@ -22,8 +22,17 @@ tasks:
   test:
     cmds: ["bun test"]
 
+  server:
+    desc: Run the remote-control server
+    cmds: ["bun server/bin/app.ts"]
+
   typecheck:
     cmds: ["tsc --noEmit"]
+
+  proto:
+    desc: Regenerate protobuf code from proto/ into src/gen/
+    cmds:
+      - cd proto && PATH="$PWD/../node_modules/.bin:$PATH" bunx buf generate
 
   native:
     desc: Rebuild the macOS shim only
