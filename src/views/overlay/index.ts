@@ -4,6 +4,7 @@ import type { Burst } from "../../business";
 import type { Theme } from "../../themes";
 import type { OverlayRPCSchema } from "../../overlay/types";
 import { newAudioPlayer } from "./audio";
+import { newPushedAssets } from "./pushed";
 import {
 	advanceSprites,
 	getSpriteOpacity,
@@ -15,6 +16,7 @@ import {
 const canvas = document.getElementById("stage") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d")!;
 const audio = newAudioPlayer();
+const pushed = newPushedAssets();
 const images = new Map<string, HTMLImageElement>();
 let sprites: Sprite[] = [];
 
@@ -40,19 +42,19 @@ function preloadTheme(theme: Theme | null) {
 	if (!theme) return;
 	const groups = [...theme.groups, ...Object.values(theme.keys)];
 	for (const group of groups) {
-		for (const image of group.images) getImage(image.url);
-		audio.preload(group.sounds.map((s) => s.url));
+		for (const image of group.images) getImage(pushed.resolve(image));
+		audio.preload(group.sounds.map((s) => pushed.resolve(s)));
 	}
 }
 
 function onBurst(burst: Burst) {
-	if (burst.sound) audio.play(burst.sound.url);
+	if (burst.sound) audio.play(pushed.resolve(burst.sound));
 	sprites = sprites.concat(
 		spawnSprites({
 			x: burst.position.x,
 			y: burst.position.y,
 			count: burst.count,
-			sources: burst.images.map((i) => i.url),
+			sources: burst.images.map((i) => pushed.resolve(i)),
 		}),
 	);
 }
@@ -87,6 +89,7 @@ const rpc = Electroview.defineRPC<OverlayRPCSchema>({
 		messages: {
 			burst: onBurst,
 			themeLoaded: ({ theme }) => preloadTheme(theme),
+			pushedTheme: ({ assets }) => pushed.adopt(assets),
 		},
 	},
 });

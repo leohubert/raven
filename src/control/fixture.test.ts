@@ -37,6 +37,7 @@ export function newOverlaySpy(overrides: Partial<Overlay> = {}) {
 	const calls = {
 		bursts: [] as Array<{ displayId: number; burst: unknown }>,
 		themes: [] as unknown[],
+		pushedAssets: [] as unknown[],
 	};
 	const base: Overlay = {
 		OpenOverlays: () => {},
@@ -46,6 +47,9 @@ export function newOverlaySpy(overrides: Partial<Overlay> = {}) {
 		},
 		BroadcastTheme: (theme) => {
 			calls.themes.push(theme);
+		},
+		SendThemeAssets: (payload) => {
+			calls.pushedAssets.push(payload);
 		},
 		SetClickThrough: () => {},
 		Close: () => {},

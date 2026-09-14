@@ -43,6 +43,7 @@ export function newControl(opts: Options) {
 			business: opts.business,
 			overlay: opts.overlay,
 			input: opts.input,
+			themes: opts.themes,
 		});
 	const deadMansSwitchMs = opts.deadMansSwitchMs ?? DEFAULT_DEAD_MANS_SWITCH_MS;
 

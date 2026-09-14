@@ -1,172 +1,116 @@
-:root {
-	color-scheme: light;
+@import "tailwindcss";
+
+@theme {
 	--bg: #f7f7f8;
 	--fg: #1b1b1f;
+	--fg-hover: #34343b;
 	--muted: #6b6b76;
 	--border: #dcdce2;
+	/* Separate from --border on purpose: a card edge is decoration, but the boundary of a
+	   control is what tells the operator it is a control, and WCAG 1.4.11 wants that at 3:1.
+	   --border is 1.37:1 against --surface; this is 3.24:1 against --surface and 3.03:1
+	   against --bg, so a text input reads as an input on either ground. */
+	--control-border: #8e8e99;
 	--surface: #ffffff;
+	--selection: #dfe0e6;
 	--active: #1a7f37;
 	--active-bg: #e3f6e8;
+	/* The wash that answers "is this machine armed?" from across the room. Kept this pale so
+	   the panel still reads as a surface rather than a status banner. */
+	--active-tint: #f4fbf6;
 	--passive-bg: #ececef;
+	/* --muted lands at 4.46:1 on --passive-bg - under 4.5 for the 11px badge and the 12px
+	   feedback line that use it. This is the same grey one step darker, at 5.11:1. */
+	--passive: #62626c;
+	/* UNKNOWN is an absence - a client that has not sent StateChanged yet - not a failure.
+	   It gets its own amber so --error keeps one meaning: a command of yours did not land. */
+	--unknown: #8a5a00;
+	--unknown-bg: #fdf1dd;
 	--error: #b3261e;
 	--error-bg: #fbe9e7;
+
+	/* 4-base spacing scale: --s1..--s8 are 4px..32px. Tight steps (1-2) bind a label to its
+	   value and a control to its neighbour; generous steps (5-8) separate reading from acting. */
+	--s1: 4px;
+	--s2: 8px;
+	--s3: 12px;
+	--s4: 16px;
+	--s5: 20px;
+	--s6: 24px;
+	--s8: 32px;
 }
 
-* {
-	box-sizing: border-box;
+:root {
+	color-scheme: light;
 }
 
 body {
-	margin: 0;
-	padding: 24px;
-	background: var(--bg);
+	scrollbar-color: var(--border) transparent;
+	scrollbar-width: thin;
+}
+
+::selection {
+	background: var(--selection);
 	color: var(--fg);
-	font: 14px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-header {
-	display: flex;
-	align-items: baseline;
-	gap: 12px;
-	margin-bottom: 8px;
+:focus-visible {
+	outline: 2px solid var(--fg);
+	outline-offset: 2px;
 }
 
-h1 {
-	font-size: 18px;
+/* min() keeps the track from exceeding a viewport narrower than the 26rem floor, which is
+   what would otherwise reintroduce the horizontal scroll this layout exists to remove. */
+.roster {
+	list-style: none;
 	margin: 0;
+	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(26rem, 100%), 1fr));
+	gap: var(--s4);
+	align-items: start;
 }
 
-.status {
-	font-size: 12px;
-	padding: 2px 8px;
-	border-radius: 999px;
-	font-weight: 600;
+/* Applied only at creation and dropped on animationend, so a roster reorder that re-inserts
+   an existing panel does not replay its entrance. */
+.client-enter {
+	animation: panel-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.status-live {
-	background: var(--active-bg);
-	color: var(--active);
+@keyframes panel-in {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+		filter: blur(2px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+		filter: none;
+	}
 }
 
-.status-down {
-	background: var(--error-bg);
-	color: var(--error);
+@media (prefers-reduced-motion: reduce) {
+	.client-enter {
+		animation: none;
+	}
 }
 
-.notice {
-	color: var(--error);
-	background: var(--error-bg);
-	padding: 8px 12px;
-	border-radius: 6px;
-	max-width: 700px;
+/* A dropped WatchClients stream leaves the last roster on screen. Those badges are claims the
+   server can no longer stand behind, so the colour that carries the claim is drained off while
+   every word stays at full contrast - the operator can still read the panel, just not trust its
+   state. Saturation only: --fg and --muted are near-neutral, so no text contrast moves. */
+.roster[data-stale="true"] > li {
+	filter: saturate(0.12);
 }
 
-table {
-	border-collapse: collapse;
-	width: 100%;
-	background: var(--surface);
-	border: 1px solid var(--border);
-	border-radius: 8px;
-	overflow: hidden;
-}
-
-th,
-td {
-	text-align: left;
-	padding: 10px 12px;
-	border-bottom: 1px solid var(--border);
-	vertical-align: top;
-}
-
-th {
-	background: var(--bg);
-	font-size: 12px;
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
-	color: var(--muted);
-}
-
-tr:last-child td {
-	border-bottom: none;
-}
-
-td.empty {
-	text-align: center;
-	color: var(--muted);
-	padding: 24px;
-}
-
-.badge {
-	display: inline-block;
-	padding: 2px 8px;
-	border-radius: 999px;
-	font-size: 12px;
-	font-weight: 600;
-}
-
-.badge-active {
-	background: var(--active-bg);
-	color: var(--active);
-}
-
-.badge-passive {
-	background: var(--passive-bg);
-	color: var(--muted);
-}
-
-.badge-unknown {
-	background: var(--error-bg);
-	color: var(--error);
-}
-
-.actions {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-	min-width: 320px;
-}
-
-.action-group {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-}
-
-.action-group select,
-.action-group input {
-	font: inherit;
-	padding: 3px 6px;
-	border: 1px solid var(--border);
-	border-radius: 4px;
-}
-
-.action-group input[type="text"] {
-	width: 140px;
-}
-
-.action-group button {
-	font: inherit;
-	padding: 4px 10px;
-	border: 1px solid var(--border);
-	border-radius: 4px;
-	background: var(--surface);
-	cursor: pointer;
-}
-
-.action-group button:disabled {
-	opacity: 0.5;
-	cursor: default;
-}
-
-.feedback {
-	font-size: 12px;
-	padding: 2px 0;
-}
-
-.feedback-ok {
-	color: var(--active);
-}
-
-.feedback-error {
-	color: var(--error);
+/* The native control is the one surface here nobody drew: it ships a different height, radius
+   and chevron on every platform, next to buttons that are pinned to 32px. The stroke below is
+   --muted written out, because a background-image cannot read a custom property. */
+.select {
+	appearance: none;
+	background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='%236b6b76' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1l4 4 4-4'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 10px center;
+	padding-right: 28px;
 }

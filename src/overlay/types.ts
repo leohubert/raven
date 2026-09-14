@@ -10,6 +10,12 @@ export type Display = {
 
 export type Point = { x: number; y: number };
 
+/**
+ * One file of a theme pushed at runtime. Base64 rather than bytes because Electrobun's RPC
+ * is JSON-based; the renderer turns each one into a blob URL.
+ */
+export type PushedAsset = { rel: string; mime: string; base64: string };
+
 /** The window a keystroke should burst in, plus the cursor position inside it. */
 export type OverlayTarget = {
 	displayId: number;
@@ -34,6 +40,11 @@ export type OverlayRPCSchema = {
 		messages: {
 			burst: Burst;
 			themeLoaded: { theme: Theme };
+			/**
+			 * A theme's files, arriving from the server. The webview cannot load them any other
+			 * way: `views://` only serves paths baked into the signed bundle at build time.
+			 */
+			pushedTheme: { theme: string; assets: PushedAsset[] };
 		};
 	};
 };

@@ -7,7 +7,7 @@ import { newThemeStore, type ThemeStore } from "../../src/themes";
 import { newAdminService } from "../transport/admin";
 import { newControlService } from "../transport/control";
 import { PingSchema, RavenAdmin, RavenControl, ServerToClientSchema } from "../../src/gen/raven/control/v1/control_pb";
-import { bundleMain, newDashboardFallback } from "../web/static";
+import { bundleCss, bundleMain, newDashboardFallback } from "../web/static";
 import { loadEnv, type Env } from "./env";
 
 export type { Env } from "./env";
@@ -33,9 +33,9 @@ const STALE_AFTER_MS = 45_000;
  * here and passed down - both listeners included, so `app.ts` only ever calls `.listen()`
  * and `cleanup()` only ever releases what this function opened.
  *
- * Async because the dashboard's bundle is built here, once, before either server starts
- * listening - see `server/web/static.ts` for why start-time bundling was chosen over a
- * separate build step.
+ * Async because the dashboard's JS and CSS bundles are built here, once, before either
+ * server starts listening - see `server/web/static.ts` for why start-time bundling was
+ * chosen over a separate build step.
  */
 export async function bootstrapServer(): Promise<BootstrapResult> {
 	const env = loadEnv();
@@ -73,6 +73,7 @@ export async function bootstrapServer(): Promise<BootstrapResult> {
 
 	const admin = newAdminService({ pool, themes });
 	const bundleJs = await bundleMain(env.WEB_ROOT);
+	const bundleCssResult = await bundleCss(env.WEB_ROOT);
 	const adminServer = createHttpServer(
 		connectNodeAdapter({
 			routes: (router) => {
@@ -81,7 +82,7 @@ export async function bootstrapServer(): Promise<BootstrapResult> {
 			// connectNodeAdapter only recognises Connect/gRPC-Web routes; everything else (the
 			// dashboard page, its bundle, its stylesheet) falls through to here rather than a
 			// separate router or a third port.
-			fallback: newDashboardFallback({ webRoot: env.WEB_ROOT, bundleJs }),
+			fallback: newDashboardFallback({ webRoot: env.WEB_ROOT, bundleJs, bundleCss: bundleCssResult }),
 		}),
 	);
 

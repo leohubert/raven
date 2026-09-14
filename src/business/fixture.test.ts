@@ -6,7 +6,7 @@ import { themeMock } from "./mock.test";
 /** A ThemeStore stub - business tests never touch the filesystem. */
 export function themeStoreFixture(themes: Theme[] = [themeMock()]) {
 	let settings: Settings = { theme: null };
-	const calls = { updates: [] as Partial<Settings>[] };
+	const calls = { updates: [] as Partial<Settings>[], pushed: [] as Theme[] };
 	return {
 		calls,
 		get settings() {
@@ -18,6 +18,13 @@ export function themeStoreFixture(themes: Theme[] = [themeMock()]) {
 				const found = themes.find((t) => t.name === name);
 				if (!found) throw new Error(`theme not found: ${name}`);
 				return found;
+			},
+			GetAsset: async (rel: string) => new TextEncoder().encode(rel),
+			UpsertPushedTheme: (theme: Theme) => {
+				calls.pushed.push(theme);
+				// Unshifted, not appended: a pushed theme shadows the disk theme of the same
+				// name, exactly as the real store does.
+				themes.unshift(theme);
 			},
 			GetSettings: async () => settings,
 			UpdateSettings: async (patch: Partial<Settings>) => {

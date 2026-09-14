@@ -1,7 +1,7 @@
 import { create } from "@bufbuild/protobuf";
 import type { HandlerContext } from "@connectrpc/connect";
 import type { ThemeStore } from "../../src/themes";
-import type { CommandAction, Pool } from "../business";
+import { PushTheme, type CommandAction, type CommandResult as PoolCommandResult, type Pool } from "../business";
 import {
 	CommandResultSchema,
 	RosterSchema,
@@ -19,9 +19,9 @@ import { newOutbox } from "./outbox";
 export type Options = { pool: Pool; themes: ThemeStore };
 
 /**
- * Maps the wire `CommandRequest.action` to the pool's local `CommandAction`. `push` has no
- * local counterpart on purpose - it fans out many `PushThemeChunk` messages (Task 9), which
- * is not a single routable command, so it is refused by the caller before this ever runs.
+ * Maps the wire `CommandRequest.action` to the pool's local `CommandAction`. `push` is
+ * absent on purpose: it needs the theme read off disk first, so `sendCommand` hands it to
+ * `PushTheme` before it ever reaches here.
  */
 function toCommandAction(req: CommandRequest): CommandAction | null {
 	switch (req.action.case) {
@@ -37,6 +37,12 @@ function toCommandAction(req: CommandRequest): CommandAction | null {
 		case undefined:
 			return null;
 	}
+}
+
+function sendAction(pool: Pool, req: CommandRequest): PoolCommandResult {
+	const action = toCommandAction(req);
+	if (!action) return { accepted: false, error: "no action supplied" };
+	return pool.SendCommand({ clientId: req.clientId, action });
 }
 
 /**
@@ -66,22 +72,14 @@ export function newAdminService(opts: Options) {
 		},
 
 		async sendCommand(req: CommandRequest): Promise<CommandResult> {
-			if (req.action.case === "push") {
-				return create(CommandResultSchema, {
-					accepted: false,
-					error: "push is not a routable command - it fans out over PushThemeChunk instead",
-				});
-			}
+			// The wire request's own commandId (if any) is dropped on every path below: only
+			// the pool mints commandIds, since an admin must never be able to supply one that
+			// collides with or spoofs a client's ack.
+			const result =
+				req.action.case === "push"
+					? await PushTheme(opts, { clientId: req.clientId, theme: req.action.value.theme })
+					: sendAction(opts.pool, req);
 
-			const action = toCommandAction(req);
-			if (!action) {
-				return create(CommandResultSchema, { accepted: false, error: "no action supplied" });
-			}
-
-			// The wire request's own commandId (if any) is dropped here: only the pool mints
-			// commandIds, since an admin must never be able to supply one that collides with
-			// or spoofs a client's ack.
-			const result = opts.pool.SendCommand({ clientId: req.clientId, action });
 			return create(CommandResultSchema, {
 				accepted: result.accepted,
 				error: result.error ?? "",

@@ -147,6 +147,21 @@ disk, so the invariant still holds when disk persistence is added later.
 Transfer is one message per file, closed by an `Ack`. The theme clips are small; finer chunking
 is not warranted yet.
 
+### 2026-09-14 update — the manifest, and where URLs are resolved
+
+Two things this section assumed turned out not to hold, and are recorded rather than edited
+away:
+
+- "The webview rewrites each `ThemeAsset.url` in the received `Theme`" fixes preloading only.
+  Bursts keep arriving from the main process afterwards, each carrying the asset's original
+  `pushed://` URL, and an in-place rewrite of the webview's own copy never reaches them. The
+  webview therefore keeps a `rel -> blob:` map and resolves at the point of use.
+- A `Theme`'s shape comes from scanning the tree on disk, and a pushed theme is on no disk the
+  client can read - so the client cannot derive one from the chunks' paths. The push now leads
+  with a manifest chunk carrying the JSON `Theme` (`PushThemeChunk.manifest`), and `total`
+  counts it. The client registers that theme in its own `ThemeStore`, which is what lets the
+  `Activate` that follows a push resolve the theme by name.
+
 ## Server
 
 `server/business/`, same conventions as `src/business/`.
@@ -189,6 +204,18 @@ The server enumerates what it can push by **reusing `src/themes/scan.ts`** via `
 against `assets/themes/` — that layer already is the schema of the theme tree, so the knowledge
 is not duplicated. Its `assetBaseUrl` is `pushed://`, a placeholder the client replaces with
 blob URLs.
+
+### 2026-09-14 update — no-framework decision reversed
+
+The decision above ("plain TS bundled by Bun — no framework") was correct when approved on
+2026-09-11 and is left as written for the record; it is not edited to look prescient. It was
+reversed once the panel-scoped renderer this dashboard needed for its mid-interaction guarantee
+(see `server/PRODUCT.md`) had grown into a hand-written reimplementation of React's
+reconciliation — a keyed diff, an id→DOM-node map, in-place text patching, manual sibling
+reordering — whose entire purpose was to protect one property that a React `key` provides for
+free. `server/web/` was ported to React 19 + Tailwind v4 for that reason, not for its own sake.
+See `docs/superpowers/plans/2026-09-14-dashboard-react-tailwind.md` for the migration plan and
+its execution ledger.
 
 ## Plan
 

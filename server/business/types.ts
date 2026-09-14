@@ -1,4 +1,5 @@
 import type { ClientInfo, ServerToClient } from "../../src/gen/raven/control/v1/control_pb";
+import type { Theme } from "../../src/themes";
 
 /** How the pool pushes to one client. The transport supplies it; tests supply a fake. */
 export type ClientSink = (msg: ServerToClient) => void;
@@ -25,7 +26,12 @@ export type CommandAction =
 	| { case: "activate"; theme: string }
 	| { case: "deactivate" }
 	| { case: "play"; theme: string; rel: string }
-	| { case: "burst"; character: string };
+	| { case: "burst"; character: string }
+	/** Already read off disk by PushTheme: the pool never touches the filesystem. */
+	| { case: "push"; theme: Theme; assets: PushableAsset[] };
+
+/** One theme file on its way to a client that does not have it. */
+export type PushableAsset = { rel: string; mime: string; bytes: Uint8Array };
 
 export type CommandRequest = { clientId: string; action: CommandAction };
 

@@ -16,12 +16,14 @@ import type {
 	ServerToClient,
 } from "../../src/gen/raven/control/v1/control_pb";
 
+export { PushTheme } from "./PushTheme";
 export type { Options } from "./options";
 export type {
 	ClientSink,
 	CommandAction,
 	CommandRequest,
 	CommandResult,
+	PushableAsset,
 	RosterListener,
 } from "./types";
 

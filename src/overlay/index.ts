@@ -5,16 +5,20 @@ import type { Burst } from "../business";
 import type { Theme } from "../themes";
 import { getTargetForCursor } from "./getTargetForCursor";
 import type { Options } from "./options";
-import type { OverlayRPCSchema, OverlayTarget } from "./types";
+import type { OverlayRPCSchema, OverlayTarget, PushedAsset } from "./types";
 
 export { getTargetForCursor } from "./getTargetForCursor";
 export type { Options, ScreenPort } from "./options";
-export type { Display, OverlayRPCSchema, OverlayTarget, Point } from "./types";
+export type { Display, OverlayRPCSchema, OverlayTarget, Point, PushedAsset } from "./types";
 
 type OverlayWindow = {
 	displayId: number;
 	window: BrowserWindow<never>;
-	send: { burst: (b: Burst) => void; themeLoaded: (p: { theme: Theme }) => void };
+	send: {
+		burst: (b: Burst) => void;
+		themeLoaded: (p: { theme: Theme }) => void;
+		pushedTheme: (p: { theme: string; assets: PushedAsset[] }) => void;
+	};
 };
 
 /**
@@ -77,6 +81,10 @@ export function newOverlay(opts: Options) {
 
 		BroadcastTheme: (theme: Theme): void => {
 			for (const w of windows) w.send.themeLoaded({ theme });
+		},
+
+		SendThemeAssets: (payload: { theme: string; assets: PushedAsset[] }): void => {
+			for (const w of windows) w.send.pushedTheme(payload);
 		},
 
 		SetClickThrough: (enabled: boolean): void => {

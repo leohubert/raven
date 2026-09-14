@@ -3,6 +3,8 @@ import { create } from "@bufbuild/protobuf";
 import { newContext, type Business } from "../business";
 import type { Input } from "../input";
 import type { Overlay } from "../overlay";
+import type { ThemeStore } from "../themes";
+import { newThemeReceiver } from "./receiveTheme";
 import {
 	AckSchema,
 	ClientState,
@@ -13,7 +15,7 @@ import {
 	type ServerToClient,
 } from "../gen/raven/control/v1/control_pb";
 
-export type Options = { business: Business; overlay: Overlay; input: Input };
+export type Options = { business: Business; overlay: Overlay; input: Input; themes: ThemeStore };
 
 /**
  * Bridges a synchronous producer (`send`/`ack`, called whenever onCommand likes) to the
@@ -87,14 +89,10 @@ function newOutbound() {
 	return { push, close, reset, iterable };
 }
 
-/**
- * The command router. PlaySound/BurstKey (task 7) and Activate/Deactivate (task 8) are
- * implemented here; PushThemeChunk is not yet - task 9 replaces that arm - so it still
- * answers with a failed Ack naming itself rather than staying silent, which would be
- * indistinguishable from a dead client to the server and dashboard.
- */
+/** The command router: every ServerToClient arrives here and is answered with an Ack. */
 export function newOnCommand(opts: Options) {
 	const outbound = newOutbound();
+	const receiver = newThemeReceiver();
 	// The only mutable state this module owns. Guards against a second Activate re-running
 	// input.Start() while already active (harmless on its own - Stop() unregisters
 	// unconditionally either way - but re-registering the same physical keys the process
@@ -228,9 +226,25 @@ export function newOnCommand(opts: Options) {
 				ack(commandId, burst !== null);
 				return;
 			}
-			case "push":
-				ack(msg.msg.value.commandId, false, "PushThemeChunk is not implemented yet");
+			case "push": {
+				const { commandId } = msg.msg.value;
+				const outcome = receiver.onChunk(msg.msg.value);
+				if (outcome.case === "pending" || outcome.case === "discarded") return;
+				if (outcome.case === "rejected") {
+					ack(commandId, false, outcome.error);
+					return;
+				}
+				// Registered in the theme store rather than handed straight to the overlay: a
+				// pushed theme has to answer to its own name for the Activate that follows it,
+				// and this client's disk will never have it.
+				opts.themes.UpsertPushedTheme(outcome.value.theme);
+				opts.overlay.SendThemeAssets({
+					theme: outcome.value.theme.name,
+					assets: outcome.value.assets,
+				});
+				ack(commandId, true);
 				return;
+			}
 			default:
 				return;
 		}

@@ -5,6 +5,7 @@ import { describe, expect, it, spyOn } from "bun:test";
 import type { Burst } from "../business";
 import { businessFixture, themeStoreFixture } from "../business/fixture.test";
 import { themeMock } from "../business/mock.test";
+import type { Theme } from "../themes";
 import {
 	ActivateSchema,
 	BurstKeySchema,
@@ -28,8 +29,39 @@ function onCommandFixture(overrides: Partial<Options> = {}) {
 		business: businessFixture().business,
 		overlay: newOverlaySpy(),
 		input: newInputSpy(),
+		themes: themeStoreFixture().store,
 		...overrides,
 	} satisfies Options;
+}
+
+const PUSHED_THEME: Theme = {
+	name: "flocs",
+	intro: [],
+	groups: [
+		{
+			name: "a",
+			sounds: [{ rel: "flocs/global/a/a.m4a", url: "pushed:///flocs/global/a/a.m4a", kind: "sound" }],
+			images: [],
+		},
+	],
+	keys: {},
+};
+
+function pushChunk(fields: {
+	commandId?: string;
+	seq: number;
+	total: number;
+	manifest?: string;
+	rel?: string;
+	mime?: string;
+	data?: Uint8Array;
+}): ServerToClient {
+	return create(ServerToClientSchema, {
+		msg: {
+			case: "push",
+			value: create(PushThemeChunkSchema, { commandId: "p1", theme: PUSHED_THEME.name, ...fields }),
+		},
+	});
 }
 
 function playSound(commandId: string, theme: string, rel: string): ServerToClient {
@@ -102,37 +134,84 @@ describe("control", () => {
 			expect((value?.msg.value as Pong).nonce).toBe(42n);
 		});
 
-		it("Should ack every still-unimplemented command as failed, so the server sees a client that heard it rather than one that looks dead", async () => {
-			const { onCommand, outbound } = newOnCommand(onCommandFixture());
-			const iter = outbound[Symbol.asyncIterator]();
+		describe("push", () => {
+			it("Should register a pushed theme under its name and hand its files to the overlay, the only route a pushed asset has to the screen", async () => {
+				// Registering it is what makes the next Activate(flocs) work: the theme is on no
+				// disk this client can read, so nothing else could ever resolve that name.
+				const themes = themeStoreFixture([]);
+				const overlay = newOverlaySpy();
+				const { onCommand, outbound } = newOnCommand(
+					onCommandFixture({ themes: themes.store, overlay }),
+				);
+				const iter = outbound[Symbol.asyncIterator]();
 
-			const commands: ServerToClient[] = [
-				create(ServerToClientSchema, {
-					msg: {
-						case: "push",
-						value: create(PushThemeChunkSchema, {
-							commandId: "c5",
-							theme: "raven",
-							rel: "a.png",
-							mime: "image/png",
-							seq: 0,
-							total: 1,
-							data: new Uint8Array(),
-						}),
+				await onCommand(pushChunk({ seq: 0, total: 2, manifest: JSON.stringify(PUSHED_THEME) }));
+				await onCommand(
+					pushChunk({
+						seq: 1,
+						total: 2,
+						rel: "flocs/global/a/a.m4a",
+						mime: "audio/mp4",
+						data: new TextEncoder().encode("clip"),
+					}),
+				);
+
+				expect(themes.calls.pushed).toEqual([PUSHED_THEME]);
+				expect(overlay.calls.pushedAssets).toEqual([
+					{
+						theme: "flocs",
+						assets: [
+							{
+								rel: "flocs/global/a/a.m4a",
+								mime: "audio/mp4",
+								base64: Buffer.from("clip").toString("base64"),
+							},
+						],
 					},
-				}),
-			];
-
-			for (const command of commands) {
-				await onCommand(command);
+				]);
 				const { value } = await iter.next();
 				expect(value?.msg.case).toBe("ack");
+				expect((value?.msg.value as Ack).ok).toBe(true);
+			});
+
+			it("Should adopt nothing until the last chunk lands, so a half-transferred theme is never activated", async () => {
+				const themes = themeStoreFixture([]);
+				const overlay = newOverlaySpy();
+				const { onCommand, outbound } = newOnCommand(
+					onCommandFixture({ themes: themes.store, overlay }),
+				);
+				const iter = outbound[Symbol.asyncIterator]();
+
+				await onCommand(pushChunk({ seq: 0, total: 2, manifest: JSON.stringify(PUSHED_THEME) }));
+
+				expect(themes.calls.pushed).toEqual([]);
+				expect(overlay.calls.pushedAssets).toEqual([]);
+
+				await onCommand(
+					pushChunk({ seq: 1, total: 2, rel: "flocs/global/a/a.m4a", mime: "audio/mp4" }),
+				);
+
+				// The first thing ever sent back is the ack for the *finished* push - an early
+				// ack would tell the server a theme had landed while it was still in flight.
+				const { value } = await iter.next();
+				expect((value?.msg.value as Ack).ok).toBe(true);
+			});
+
+			it("Should ack a refused asset path as failed, so a rejected push shows on the dashboard instead of silently doing nothing", async () => {
+				const themes = themeStoreFixture([]);
+				const { onCommand, outbound } = newOnCommand(onCommandFixture({ themes: themes.store }));
+				const iter = outbound[Symbol.asyncIterator]();
+
+				await onCommand(pushChunk({ seq: 0, total: 2, manifest: JSON.stringify(PUSHED_THEME) }));
+				await onCommand(pushChunk({ seq: 1, total: 2, rel: "../../../.ssh/id_rsa", mime: "audio/mp4" }));
+
+				const { value } = await iter.next();
 				const ack = value?.msg.value as Ack;
-				const expectedCommandId = (command.msg.value as { commandId: string }).commandId;
-				expect(ack.commandId).toBe(expectedCommandId);
+				expect(ack.commandId).toBe("p1");
 				expect(ack.ok).toBe(false);
 				expect(ack.error.length).toBeGreaterThan(0);
-			}
+				expect(themes.calls.pushed).toEqual([]);
+			});
 		});
 
 		describe("activate", () => {
@@ -464,7 +543,7 @@ describe("control", () => {
 			const overlay = newOverlaySpy({
 				GetTargetUnderCursor: () => ({ displayId: 3, position: { x: 5, y: 6 }, scaleFactor: 2 }),
 			});
-			const { onCommand, outbound } = newOnCommand({ business, overlay, input: newInputSpy() });
+			const { onCommand, outbound } = newOnCommand(onCommandFixture({ business, overlay }));
 			const iter = outbound[Symbol.asyncIterator]();
 
 			await onCommand(burstKey("c1", "a"));
@@ -478,11 +557,7 @@ describe("control", () => {
 		it("Should ack BurstKey as failed when there is no display under the cursor, without touching the keyboard", async () => {
 			const { business, ctx } = businessFixture();
 			await business.loadTheme(ctx, { name: "raven" });
-			const { onCommand, outbound } = newOnCommand({
-				business,
-				overlay: newOverlaySpy(),
-				input: newInputSpy(),
-			});
+			const { onCommand, outbound } = newOnCommand(onCommandFixture({ business }));
 			const iter = outbound[Symbol.asyncIterator]();
 
 			await onCommand(burstKey("c1", "a"));

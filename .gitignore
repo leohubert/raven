@@ -7,3 +7,6 @@ artifacts/
 .DS_Store
 .cottontail-tmp/
 native/*.dylib
+
+server/.impeccable/hook.cache.json
+server/.impeccable/live/sessions/

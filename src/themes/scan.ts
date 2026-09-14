@@ -1,4 +1,4 @@
-import { readdir, stat } from "node:fs/promises";
+import { readdir, readFile, stat } from "node:fs/promises";
 import { join, posix } from "node:path";
 
 import {
@@ -98,6 +98,11 @@ function toGroup(name: string, assets: ThemeAsset[]): ThemeGroup {
 		sounds: assets.filter((a) => a.kind === "sound"),
 		images: assets.filter((a) => a.kind === "image"),
 	};
+}
+
+/** The raw bytes of one asset, for pushing a theme to a client that does not have it. */
+export async function ReadAsset(themesRoot: string, rel: string): Promise<Uint8Array> {
+	return readFile(join(themesRoot, ...rel.split("/")));
 }
 
 export async function ListThemeNames(themesRoot: string): Promise<string[]> {

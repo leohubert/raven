@@ -3,8 +3,8 @@ import { createHandlerContext } from "@connectrpc/connect";
 import { describe, expect, it } from "bun:test";
 import { newAdminService } from "./admin";
 import { newPool } from "../business";
-import { helloFor } from "../business/fixture.test";
-import type { ThemeStore } from "../../src/themes";
+import { helloFor, themeStoreFixture } from "../business/fixture.test";
+import type { Theme } from "../../src/themes";
 import {
 	CommandRequestSchema,
 	ListPushableThemesRequestSchema,
@@ -12,16 +12,16 @@ import {
 	PushThemeSchema,
 	RavenAdmin,
 	WatchClientsRequestSchema,
+	type ServerToClient,
 } from "../../src/gen/raven/control/v1/control_pb";
 
-function fakeThemeStore(themes: string[] = []): ThemeStore {
+/** A one-file theme: enough to tell a manifest chunk from an asset chunk. */
+function themeOf(name: string): Theme {
 	return {
-		ListThemes: async () => themes,
-		GetTheme: async () => {
-			throw new Error("fakeThemeStore.GetTheme not implemented");
-		},
-		GetSettings: async () => ({ theme: null }),
-		UpdateSettings: async (patch) => ({ theme: patch.theme ?? null }),
+		name,
+		intro: [{ rel: `${name}/intro.m4a`, url: `pushed:///${name}/intro.m4a`, kind: "sound" }],
+		groups: [],
+		keys: {},
 	};
 }
 
@@ -40,7 +40,7 @@ describe("transport", () => {
 		describe("watchClients", () => {
 			it("Should push a fresh roster to every watcher when a client connects", async () => {
 				const pool = newPool({ now: () => new Date(0) });
-				const admin = newAdminService({ pool, themes: fakeThemeStore() });
+				const admin = newAdminService({ pool, themes: themeStoreFixture() });
 
 				const streamA = admin.watchClients(create(WatchClientsRequestSchema, {}), testContext());
 				const streamB = admin.watchClients(create(WatchClientsRequestSchema, {}), testContext());
@@ -71,7 +71,7 @@ describe("transport", () => {
 					};
 				};
 
-				const admin = newAdminService({ pool, themes: fakeThemeStore() });
+				const admin = newAdminService({ pool, themes: themeStoreFixture() });
 				const context = testContext();
 				const stream = admin.watchClients(create(WatchClientsRequestSchema, {}), context);
 
@@ -90,7 +90,7 @@ describe("transport", () => {
 				const pool = newPool({ now: () => new Date(0) });
 				pool.onConnect("c1", () => {});
 				pool.onClientMessage("c1", helloFor("c1"));
-				const admin = newAdminService({ pool, themes: fakeThemeStore() });
+				const admin = newAdminService({ pool, themes: themeStoreFixture() });
 
 				const wireReq = create(CommandRequestSchema, {
 					clientId: "c1",
@@ -110,9 +110,12 @@ describe("transport", () => {
 				expect(result.commandId).not.toBe("operator-supplied");
 			});
 
-			it("Should refuse push, since it fans out over PushThemeChunk instead of being one routable command", async () => {
+			it("Should fan a push out over the client's own stream, which is the only way a theme reaches a machine that lacks it", async () => {
+				const sent: ServerToClient[] = [];
 				const pool = newPool({ now: () => new Date(0) });
-				const admin = newAdminService({ pool, themes: fakeThemeStore() });
+				pool.onConnect("c1", (msg) => sent.push(msg));
+				pool.onClientMessage("c1", helloFor("c1"));
+				const admin = newAdminService({ pool, themes: themeStoreFixture([themeOf("flocs")]) });
 
 				const wireReq = create(CommandRequestSchema, {
 					clientId: "c1",
@@ -121,15 +124,33 @@ describe("transport", () => {
 
 				const result = await admin.sendCommand(wireReq);
 
+				expect(result.accepted).toBe(true);
+				// The manifest, then the theme's one file.
+				expect(sent.map((m) => m.msg.case)).toEqual(["push", "push"]);
+			});
+
+			it("Should report a theme the server cannot read rather than accepting a push that sends nothing", async () => {
+				const pool = newPool({ now: () => new Date(0) });
+				pool.onConnect("c1", () => {});
+				pool.onClientMessage("c1", helloFor("c1"));
+				const admin = newAdminService({ pool, themes: themeStoreFixture() });
+
+				const result = await admin.sendCommand(
+					create(CommandRequestSchema, {
+						clientId: "c1",
+						action: { case: "push", value: create(PushThemeSchema, { theme: "ghost" }) },
+					}),
+				);
+
 				expect(result.accepted).toBe(false);
-				expect(result.error).toContain("push");
+				expect(result.error).toContain("ghost");
 			});
 		});
 
 		describe("listPushableThemes", () => {
 			it("Should return the themes from the theme store", async () => {
 				const pool = newPool({ now: () => new Date(0) });
-				const admin = newAdminService({ pool, themes: fakeThemeStore(["flocs", "raven"]) });
+				const admin = newAdminService({ pool, themes: themeStoreFixture([themeOf("flocs"), themeOf("raven")]) });
 
 				const result = await admin.listPushableThemes(create(ListPushableThemesRequestSchema, {}));
 

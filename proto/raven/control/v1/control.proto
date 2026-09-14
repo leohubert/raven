@@ -41,6 +41,12 @@ message PushThemeChunk {
   uint32 seq = 5;
   uint32 total = 6;
   bytes data = 7;
+  // The JSON-encoded `Theme` (src/themes/types.ts), carried by the leading chunk of a
+  // push and empty on every other one. The client cannot derive it: a Theme's shape comes
+  // from scanning the tree on disk, and a pushed theme is never on the client's disk.
+  // JSON of the type both ends already share, rather than a proto mirror of it, so there
+  // is one definition of a Theme to keep in sync instead of two.
+  string manifest = 8;
 }
 
 message ClientToServer {

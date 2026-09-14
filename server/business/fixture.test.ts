@@ -8,7 +8,27 @@ import {
 	PongSchema,
 	StateChangedSchema,
 } from "../../src/gen/raven/control/v1/control_pb";
+import type { Theme, ThemeStore } from "../../src/themes";
 import type { CommandAction, PoolEntry } from "./types";
+
+/**
+ * A ThemeStore stub - server tests never touch the filesystem. Every asset's bytes are its
+ * own `rel`, so a test can tell which file's content landed in which chunk.
+ */
+export function themeStoreFixture(themes: Theme[] = []): ThemeStore {
+	return {
+		ListThemes: async () => themes.map((t) => t.name).sort(),
+		GetTheme: async (name: string) => {
+			const found = themes.find((t) => t.name === name);
+			if (!found) throw new Error(`theme not found: ${name}`);
+			return found;
+		},
+		GetAsset: async (rel: string) => new TextEncoder().encode(rel),
+		UpsertPushedTheme: () => {},
+		GetSettings: async () => ({ theme: null }),
+		UpdateSettings: async (patch) => ({ theme: patch.theme ?? null }),
+	};
+}
 
 export function helloFor(clientId: string) {
 	return create(ClientToServerSchema, {

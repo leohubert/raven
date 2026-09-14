@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { ASSET_BASE_URL, RAVEN_TREE, themeStoreFactory } from "./factory.test";
+import type { Theme } from "./types";
 
 describe("themes", () => {
 	describe("ListThemes", () => {
@@ -183,5 +184,37 @@ describe("themes image format deduplication", () => {
 		});
 		const theme = await store.GetTheme("pick");
 		expect(theme.groups.find((g) => g.name === "")?.images[0]?.rel).toBe("pick/global/a.webp");
+	});
+});
+
+describe("themes pushed at runtime", () => {
+	it("Should make a pushed theme loadable by name, since the operator activates it by name right after pushing", async () => {
+		const { store } = await themeStoreFactory(RAVEN_TREE);
+		const pushed: Theme = { name: "flocs", intro: [], groups: [], keys: {} };
+
+		store.UpsertPushedTheme(pushed);
+
+		expect(await store.ListThemes()).toEqual(["flocs", "raven", "toad"]);
+		expect(await store.GetTheme("flocs")).toEqual(pushed);
+	});
+
+	it("Should let a pushed theme win over the disk theme of the same name, which is what re-pushing an edited theme means", async () => {
+		const { store } = await themeStoreFactory(RAVEN_TREE);
+		const pushed: Theme = { name: "raven", intro: [], groups: [], keys: {} };
+
+		store.UpsertPushedTheme(pushed);
+
+		expect(await store.GetTheme("raven")).toEqual(pushed);
+		expect(await store.ListThemes()).toEqual(["raven", "toad"]);
+	});
+});
+
+describe("themes GetAsset", () => {
+	it("Should read a theme file's bytes, which is how the server ships a theme to a client that has never had it", async () => {
+		const { store } = await themeStoreFactory(RAVEN_TREE);
+
+		const bytes = await store.GetAsset("raven/global/gael/gael.m4a");
+
+		expect(new TextDecoder().decode(bytes)).toBe("x");
 	});
 });
