@@ -1,0 +1,63 @@
+version: "3"
+
+env:
+  HUTCH_HOME: '{{.ROOT_DIR}}/.hutch'
+
+tasks:
+  default:
+    cmds: [task: dev]
+
+  dev:
+    desc: Build and run with watch
+    cmds: ["bunx electrobun@2.0.1 dev --watch"]
+
+  start:
+    desc: Run the last build
+    cmds: ["bunx electrobun@2.0.1 run"]
+
+  build:
+    desc: Stable release build into artifacts/
+    cmds: ["bunx electrobun@2.0.1 build --env=stable"]
+
+  test:
+    cmds: ["bun test"]
+
+  server:
+    desc: Run the remote-control server
+    cmds: ["bun server/bin/app.ts"]
+
+  typecheck:
+    cmds: ["tsc --noEmit"]
+
+  proto:
+    desc: Regenerate protobuf code from proto/ into src/gen/
+    cmds:
+      - cd proto && PATH="$PWD/../node_modules/.bin:$PATH" bunx buf generate
+
+  native:
+    desc: Rebuild the macOS shim only
+    cmds: ["bunx electrobun@2.0.1 config > /dev/null && bun scripts/build-native.ts"]
+
+  optimize-images:
+    desc: Convert assets/themes images to 128px webp and delete the sources
+    cmds: ["bun scripts/optimize-images.ts"]
+
+  icon:
+    desc: Re-render icon.svg into the icon.iconset Electrobun bundles
+    cmds: ["bun scripts/generate-icon.ts"]
+
+  flocs:
+    desc: Rebuild the flocs theme - every key says its own name in French
+    cmds: ["bun scripts/generate-flocs.ts {{.CLI_ARGS}}"]
+
+  clean:
+    desc: Recover from a killed build that left a stale lock
+    cmds:
+      - pkill -9 -f cottontail-build-helper || true
+      - pkill -9 -f hutch-engine || true
+      - rm -f .hutch/locks/electrobun-build.lock
+      - rm -rf build artifacts
+
+  check:
+    desc: Everything CI would run
+    cmds: [{task: typecheck}, {task: test}]

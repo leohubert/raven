@@ -1,46 +1,37 @@
 {
   "name": "raven",
-  "description": "Raven project",
-  "type": "commonjs",
-  "version": "0.1.0",
-  "main": "index.js",
-  "license": "MIT",
-  "build": {
-    "appId": "ai.bodyguard.raven",
-    "extraResources": [
-      "assets/**/*"
-    ],
-    "win": {
-      "publish": [
-        "github"
-      ]
-    },
-    "mac": {
-      "publish": [
-        "github"
-      ]
-    },
-    "linux": {
-      "publish": [
-        "github"
-      ]
-    }
-  },
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "start": "yarn build:client && electron .",
-    "build:client": "webpack --mode production",
-    "build": "yarn build:client && electron-builder"
-  },
-  "dependencies": {
-    "electron-updater": "^6.1.1",
-    "play-sound": "^1.1.5",
-    "tsparticles": "^2.12.0",
-    "tsparticles-engine": "^2.12.0",
-    "webpack": "^5.89.0"
+    "dev": "HUTCH_HOME=\"$PWD/.hutch\" bunx electrobun@2.0.1 dev --watch",
+    "start": "HUTCH_HOME=\"$PWD/.hutch\" bunx electrobun@2.0.1 run",
+    "build": "HUTCH_HOME=\"$PWD/.hutch\" bunx electrobun@2.0.1 build --env=stable",
+    "prepare:devkit": "HUTCH_HOME=\"$PWD/.hutch\" bunx electrobun@2.0.1 prepare",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "server": "bun server/bin/app.ts",
+    "proto": "cd proto && PATH=\"$PWD/../node_modules/.bin:$PATH\" bunx buf generate"
   },
   "devDependencies": {
-    "electron": "^25.8.0",
-    "electron-builder": "^24.4.0",
-    "webpack-cli": "^5.1.4"
+    "@bufbuild/buf": "^1.73.0",
+    "@bufbuild/protoc-gen-es": "^2.15.0",
+    "@happy-dom/global-registrator": "^20.14.5",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
+    "@types/bun": "latest",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "@bufbuild/protobuf": "^2.15.0",
+    "@connectrpc/connect": "^2.2.0",
+    "@connectrpc/connect-node": "^2.2.0",
+    "@connectrpc/connect-web": "^2.2.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   }
 }

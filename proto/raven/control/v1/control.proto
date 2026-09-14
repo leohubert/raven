@@ -1,0 +1,116 @@
+syntax = "proto3";
+package raven.control.v1;
+
+message Display {
+  int32 id = 1;
+  int32 width = 2;
+  int32 height = 3;
+  double scale_factor = 4;
+}
+
+enum ClientState {
+  CLIENT_STATE_UNSPECIFIED = 0;
+  CLIENT_STATE_PASSIVE = 1;
+  CLIENT_STATE_ACTIVE = 2;
+}
+
+message Hello {
+  string client_id = 1;
+  string hostname = 2;
+  string version = 3;
+  repeated Display displays = 4;
+  repeated string themes = 5;
+}
+
+message Ping { int64 nonce = 1; }
+message Pong { int64 nonce = 1; }
+message StateChanged { ClientState state = 1; string theme = 2; }
+message ThemeList { repeated string themes = 1; }
+message Ack { string command_id = 1; bool ok = 2; string error = 3; }
+
+message Activate { string command_id = 1; string theme = 2; }
+message Deactivate { string command_id = 1; }
+message PlaySound { string command_id = 1; string theme = 2; string rel = 3; }
+message BurstKey { string command_id = 1; string character = 2; }
+
+message PushThemeChunk {
+  string command_id = 1;
+  string theme = 2;
+  string rel = 3;
+  string mime = 4;
+  uint32 seq = 5;
+  uint32 total = 6;
+  bytes data = 7;
+  // The JSON-encoded `Theme` (src/themes/types.ts), carried by the leading chunk of a
+  // push and empty on every other one. The client cannot derive it: a Theme's shape comes
+  // from scanning the tree on disk, and a pushed theme is never on the client's disk.
+  // JSON of the type both ends already share, rather than a proto mirror of it, so there
+  // is one definition of a Theme to keep in sync instead of two.
+  string manifest = 8;
+}
+
+message ClientToServer {
+  oneof msg {
+    Hello hello = 1;
+    Pong pong = 2;
+    StateChanged state = 3;
+    ThemeList themes = 4;
+    Ack ack = 5;
+  }
+}
+
+message ServerToClient {
+  oneof msg {
+    Ping ping = 1;
+    Activate activate = 2;
+    Deactivate deactivate = 3;
+    PlaySound play = 4;
+    BurstKey burst = 5;
+    PushThemeChunk push = 6;
+  }
+}
+
+message ClientInfo {
+  string client_id = 1;
+  string hostname = 2;
+  string version = 3;
+  ClientState state = 4;
+  string theme = 5;
+  repeated string themes = 6;
+  repeated Display displays = 7;
+  int64 connected_at_unix_ms = 8;
+}
+
+message Roster { repeated ClientInfo clients = 1; }
+
+message PushTheme { string theme = 1; }
+
+message CommandRequest {
+  string client_id = 1;
+  oneof action {
+    Activate activate = 2;
+    Deactivate deactivate = 3;
+    PlaySound play = 4;
+    BurstKey burst = 5;
+    PushTheme push = 6;
+  }
+}
+
+message CommandResult {
+  bool accepted = 1;
+  string error = 2;
+  string command_id = 3;
+}
+
+service RavenControl {
+  rpc Connect(stream ClientToServer) returns (stream ServerToClient);
+}
+
+message WatchClientsRequest {}
+message ListPushableThemesRequest {}
+
+service RavenAdmin {
+  rpc WatchClients(WatchClientsRequest) returns (stream Roster);
+  rpc SendCommand(CommandRequest) returns (CommandResult);
+  rpc ListPushableThemes(ListPushableThemesRequest) returns (ThemeList);
+}

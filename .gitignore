@@ -1,5 +1,12 @@
-node_modules
-dist
-.idea
-.vite
+node_modules/
+.hutch/
+build/
+artifacts/
+
+.env
 .DS_Store
+.cottontail-tmp/
+native/*.dylib
+
+server/.impeccable/hook.cache.json
+server/.impeccable/live/sessions/
